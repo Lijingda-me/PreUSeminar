@@ -43,10 +43,14 @@ app.use('/api/matching', matchingRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/safety', safetyRoutes);
-app.use(express.static(clientDist));
-app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/api')) return next();
-  res.sendFile(path.join(clientDist, 'index.html'));
+// app.use(express.static(clientDist));
+// app.get('*', (req, res, next) => {
+//   if (req.path.startsWith('/api')) return next();
+//   res.sendFile(path.join(clientDist, 'index.html'));
+// });
+
+app.get('/', (_req, res) => {
+  res.json({ ok: true, name: 'BridgeUp API', status: 'running' });
 });
 
 app.use((err, _req, res, _next) => {
