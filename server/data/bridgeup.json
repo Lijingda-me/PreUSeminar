@@ -1,0 +1,1063 @@
+{
+  "users": [
+    {
+      "id": "learner-1",
+      "name": "Aisha Tan",
+      "email": "learner@bridgeup.sg",
+      "role": "learner",
+      "onboarded": true,
+      "passwordHash": "$2a$10$Vy1/h460kGqKTZoyPJ0jl.xrHbq5MZiqmEPv26xcE3MurPJXDV9Ya",
+      "blockedUsers": [],
+      "savedProfiles": [],
+      "status": "active",
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "mentor-1",
+      "name": "Mr Lim Wei Kiat",
+      "email": "mentor@bridgeup.sg",
+      "role": "mentor",
+      "onboarded": true,
+      "passwordHash": "$2a$10$Vy1/h460kGqKTZoyPJ0jl.xrHbq5MZiqmEPv26xcE3MurPJXDV9Ya",
+      "blockedUsers": [],
+      "savedProfiles": [],
+      "status": "active",
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "mentor-2",
+      "name": "Mdm Siti Rahman",
+      "email": "siti@bridgeup.sg",
+      "role": "mentor",
+      "onboarded": true,
+      "passwordHash": "$2a$10$Vy1/h460kGqKTZoyPJ0jl.xrHbq5MZiqmEPv26xcE3MurPJXDV9Ya",
+      "blockedUsers": [],
+      "savedProfiles": [],
+      "status": "active",
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "mentor-3",
+      "name": "Dr Priya Nair",
+      "email": "priya@bridgeup.sg",
+      "role": "mentor",
+      "onboarded": true,
+      "passwordHash": "$2a$10$Vy1/h460kGqKTZoyPJ0jl.xrHbq5MZiqmEPv26xcE3MurPJXDV9Ya",
+      "blockedUsers": [],
+      "savedProfiles": [],
+      "status": "active",
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "learner-2",
+      "name": "Joshua Goh",
+      "email": "joshua@bridgeup.sg",
+      "role": "learner",
+      "onboarded": true,
+      "passwordHash": "$2a$10$Vy1/h460kGqKTZoyPJ0jl.xrHbq5MZiqmEPv26xcE3MurPJXDV9Ya",
+      "blockedUsers": [],
+      "savedProfiles": [],
+      "status": "active",
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "staff-1",
+      "name": "BridgeUp Staff",
+      "email": "staff@bridgeup.sg",
+      "role": "staff",
+      "onboarded": true,
+      "passwordHash": "$2a$10$Vy1/h460kGqKTZoyPJ0jl.xrHbq5MZiqmEPv26xcE3MurPJXDV9Ya",
+      "blockedUsers": [],
+      "savedProfiles": [],
+      "status": "active",
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "admin-1",
+      "name": "BridgeUp Admin",
+      "email": "admin@bridgeup.sg",
+      "role": "admin",
+      "onboarded": true,
+      "passwordHash": "$2a$10$Vy1/h460kGqKTZoyPJ0jl.xrHbq5MZiqmEPv26xcE3MurPJXDV9Ya",
+      "blockedUsers": [],
+      "savedProfiles": [],
+      "status": "active",
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "21f28853-488f-4a5a-80b8-48e5e1265b21",
+      "name": "Jingda",
+      "email": "ljingda222@gmail.com",
+      "role": "learner",
+      "passwordHash": "$2a$10$mZJv2l39xRUC7qKoh571m.nGj5k1q.QPqePUoL4rcufUIkESetG9S",
+      "onboarded": true,
+      "blockedUsers": [],
+      "savedProfiles": [],
+      "status": "active",
+      "createdAt": "2026-06-01T05:42:16.148Z",
+      "updatedAt": "2026-06-01T05:54:45.367Z"
+    }
+  ],
+  "mentorProfiles": [
+    {
+      "id": "mp-1",
+      "userId": "mentor-1",
+      "photo": "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=900&q=80",
+      "age": 68,
+      "profession": "Retired DBS Relationship Manager",
+      "yearsExperience": 42,
+      "industries": [
+        "Finance",
+        "Banking",
+        "Social Impact"
+      ],
+      "skills": [
+        "Leadership",
+        "Interview coaching",
+        "Financial planning"
+      ],
+      "topics": [
+        "Career guidance",
+        "Finance",
+        "Workplace communication"
+      ],
+      "languages": [
+        "English",
+        "Mandarin",
+        "Hokkien"
+      ],
+      "availability": [
+        "Weekends",
+        "Evenings"
+      ],
+      "mentorshipStyle": "Structured",
+      "personality": [
+        "Patient",
+        "Practical"
+      ],
+      "goals": [
+        "Give back",
+        "Youth confidence"
+      ],
+      "bio": "I help young people understand banking careers, prepare for interviews, and build calm confidence.",
+      "verified": true,
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "mp-2",
+      "userId": "mentor-2",
+      "photo": "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=900&q=80",
+      "age": 63,
+      "profession": "Former HR Director",
+      "yearsExperience": 35,
+      "industries": [
+        "Healthcare",
+        "Human Resources",
+        "Education"
+      ],
+      "skills": [
+        "People management",
+        "Resume review",
+        "Conflict resolution"
+      ],
+      "topics": [
+        "Interview confidence",
+        "Leadership",
+        "Career transitions"
+      ],
+      "languages": [
+        "English",
+        "Malay"
+      ],
+      "availability": [
+        "Weekdays",
+        "Mornings"
+      ],
+      "mentorshipStyle": "Conversational",
+      "personality": [
+        "Warm",
+        "Direct"
+      ],
+      "goals": [
+        "Community building",
+        "Career clarity"
+      ],
+      "bio": "I enjoy helping learners find their voice, practise tough conversations, and plan realistic next steps.",
+      "verified": true,
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "mp-3",
+      "userId": "mentor-3",
+      "photo": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=900&q=80",
+      "age": 59,
+      "profession": "Technology Founder and Advisor",
+      "yearsExperience": 30,
+      "industries": [
+        "Technology",
+        "Startups",
+        "Design"
+      ],
+      "skills": [
+        "Product strategy",
+        "Public speaking",
+        "Networking"
+      ],
+      "topics": [
+        "Portfolio review",
+        "Technology",
+        "Entrepreneurship"
+      ],
+      "languages": [
+        "English",
+        "Tamil"
+      ],
+      "availability": [
+        "Weekends",
+        "Evenings"
+      ],
+      "mentorshipStyle": "Hands-on",
+      "personality": [
+        "Creative",
+        "Encouraging"
+      ],
+      "goals": [
+        "Open doors",
+        "Practical skills"
+      ],
+      "bio": "I mentor youths on tech portfolios, product thinking, internships, and building confidence through practice.",
+      "verified": true,
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    }
+  ],
+  "learnerProfiles": [
+    {
+      "id": "lp-1",
+      "userId": "learner-1",
+      "photo": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80",
+      "age": 22,
+      "profession": "Final-year Business Student",
+      "yearsExperience": 1,
+      "industries": [
+        "Finance",
+        "Social Impact"
+      ],
+      "skills": [
+        "Presentation",
+        "Research",
+        "Excel"
+      ],
+      "topics": [
+        "Career guidance",
+        "Interview confidence",
+        "Finance"
+      ],
+      "languages": [
+        "English",
+        "Mandarin"
+      ],
+      "availability": [
+        "Weekends",
+        "Evenings"
+      ],
+      "mentorshipStyle": "Structured",
+      "personality": [
+        "Curious",
+        "Reflective"
+      ],
+      "goals": [
+        "First job",
+        "Leadership"
+      ],
+      "bio": "Looking for practical career wisdom and a kind mentor who understands Singapore workplaces.",
+      "verified": true,
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "lp-2",
+      "userId": "learner-2",
+      "photo": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80",
+      "age": 19,
+      "profession": "ITE Digital Media Student",
+      "yearsExperience": 1,
+      "industries": [
+        "Technology",
+        "Design"
+      ],
+      "skills": [
+        "Video editing",
+        "UI design"
+      ],
+      "topics": [
+        "Portfolio review",
+        "Networking",
+        "Technology"
+      ],
+      "languages": [
+        "English",
+        "Malay"
+      ],
+      "availability": [
+        "Weekends"
+      ],
+      "mentorshipStyle": "Hands-on",
+      "personality": [
+        "Creative",
+        "Energetic"
+      ],
+      "goals": [
+        "Internship",
+        "Confidence"
+      ],
+      "bio": "I want to learn from someone who has changed careers and can help me grow a portfolio.",
+      "verified": true,
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "fbcf3a7f-2594-43ec-98ef-05430d040285",
+      "photo": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80",
+      "age": 21,
+      "profession": "Poly Student",
+      "yearsExperience": 1,
+      "industries": [
+        "Finance"
+      ],
+      "skills": [
+        "Leadership"
+      ],
+      "topics": [
+        "Career guidance"
+      ],
+      "languages": [
+        "English"
+      ],
+      "availability": [
+        "Weekends"
+      ],
+      "mentorshipStyle": "Structured",
+      "personality": [
+        "Curious"
+      ],
+      "goals": [
+        "Confidence"
+      ],
+      "bio": "Have fun",
+      "userId": "21f28853-488f-4a5a-80b8-48e5e1265b21",
+      "createdAt": "2026-06-01T05:54:45.358Z",
+      "updatedAt": "2026-06-01T05:54:45.358Z"
+    }
+  ],
+  "matches": [
+    {
+      "id": "match-1",
+      "learnerId": "learner-1",
+      "mentorId": "mentor-1",
+      "status": "matched",
+      "score": 60,
+      "explanation": "60% match because both selected Finance, Social Impact, English, Weekends, Career guidance, Finance.",
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "0b2045a3-7fe5-4b65-ab51-a0f8fbb06dfd",
+      "learnerId": "learner-1",
+      "mentorId": "mentor-3",
+      "status": "matched",
+      "score": 23,
+      "explanation": "23% match because both selected English, Weekends.",
+      "createdAt": "2026-06-01T06:04:01.991Z",
+      "updatedAt": "2026-06-01T06:04:01.991Z"
+    }
+  ],
+  "matchRequests": [
+    {
+      "id": "req-1",
+      "fromUserId": "learner-1",
+      "toUserId": "mentor-1",
+      "action": "connect",
+      "status": "accepted",
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T06:38:53.825Z"
+    },
+    {
+      "id": "5a685c91-df1a-455c-a5dc-f1997dcd6ce7",
+      "fromUserId": "learner-1",
+      "toUserId": "mentor-3",
+      "action": "connect",
+      "status": "accepted",
+      "createdAt": "2026-06-01T06:04:01.969Z",
+      "updatedAt": "2026-06-01T06:04:01.999Z"
+    },
+    {
+      "id": "0c60e7de-52ba-46e7-9508-82214eb1e7b9",
+      "fromUserId": "learner-1",
+      "toUserId": "mentor-2",
+      "action": "skip",
+      "status": "accepted",
+      "createdAt": "2026-06-01T06:04:04.813Z",
+      "updatedAt": "2026-06-01T06:04:04.813Z"
+    },
+    {
+      "id": "35514e7b-7f64-4b2a-9fc5-cf275b4b4bcb",
+      "fromUserId": "mentor-1",
+      "toUserId": "learner-1",
+      "action": "connect",
+      "status": "accepted",
+      "createdAt": "2026-06-01T06:38:53.803Z",
+      "updatedAt": "2026-06-01T06:38:53.832Z"
+    },
+    {
+      "id": "2838dad9-ce24-40f9-8eb1-8904d33d7bfc",
+      "fromUserId": "mentor-1",
+      "toUserId": "21f28853-488f-4a5a-80b8-48e5e1265b21",
+      "action": "connect",
+      "status": "pending",
+      "createdAt": "2026-06-01T06:39:48.959Z",
+      "updatedAt": "2026-06-01T06:39:48.959Z"
+    },
+    {
+      "id": "2483d702-bd63-4b91-b6f1-bff8a596642d",
+      "fromUserId": "mentor-1",
+      "toUserId": "learner-2",
+      "action": "connect",
+      "status": "pending",
+      "createdAt": "2026-06-01T06:50:14.431Z",
+      "updatedAt": "2026-06-01T06:50:14.431Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg-1",
+      "matchId": "match-1",
+      "senderId": "mentor-1",
+      "receiverId": "learner-1",
+      "body": "Welcome to BridgeUp, Aisha. Shall we plan a weekend chat?",
+      "readAt": null,
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T06:51:09.923Z",
+      "pinned": true,
+      "pinnedBy": "mentor-1",
+      "pinnedAt": "2026-06-01T06:51:09.920Z"
+    },
+    {
+      "id": "ba68f2b2-2054-4ce4-8c77-e7481e4554c0",
+      "matchId": "match-1",
+      "senderId": "mentor-1",
+      "receiverId": "learner-1",
+      "body": "e",
+      "replyToId": null,
+      "forwarded": false,
+      "forwardedFromId": null,
+      "pinned": false,
+      "deliveredAt": "2026-06-01T06:51:14.719Z",
+      "readAt": null,
+      "createdAt": "2026-06-01T06:51:14.723Z",
+      "updatedAt": "2026-06-01T06:51:14.723Z"
+    },
+    {
+      "id": "36fec8f8-e54b-4cbc-bfec-e274af0cb7fe",
+      "matchId": "match-1",
+      "senderId": "mentor-1",
+      "receiverId": "learner-1",
+      "body": "e",
+      "replyToId": null,
+      "forwarded": false,
+      "forwardedFromId": null,
+      "pinned": false,
+      "deliveredAt": "2026-06-01T06:51:16.647Z",
+      "readAt": null,
+      "createdAt": "2026-06-01T06:51:16.650Z",
+      "updatedAt": "2026-06-01T06:51:16.650Z"
+    },
+    {
+      "id": "0b158a91-cdac-4107-a7d1-6cd604690a84",
+      "matchId": "match-1",
+      "senderId": "mentor-1",
+      "receiverId": "learner-1",
+      "body": "e",
+      "replyToId": null,
+      "forwarded": false,
+      "forwardedFromId": null,
+      "pinned": false,
+      "deliveredAt": "2026-06-01T06:51:16.918Z",
+      "readAt": null,
+      "createdAt": "2026-06-01T06:51:16.921Z",
+      "updatedAt": "2026-06-01T06:51:16.921Z"
+    },
+    {
+      "id": "2d190653-e88b-4d75-b5d7-9d35a7824cf1",
+      "matchId": "match-1",
+      "senderId": "mentor-1",
+      "receiverId": "learner-1",
+      "body": "e",
+      "replyToId": null,
+      "forwarded": false,
+      "forwardedFromId": null,
+      "pinned": false,
+      "deliveredAt": "2026-06-01T06:51:17.165Z",
+      "readAt": null,
+      "createdAt": "2026-06-01T06:51:17.167Z",
+      "updatedAt": "2026-06-01T06:51:17.167Z"
+    },
+    {
+      "id": "4fcaeba9-a2d8-4fa7-948b-9f0996d89605",
+      "matchId": "match-1",
+      "senderId": "mentor-1",
+      "receiverId": "learner-1",
+      "body": "e",
+      "replyToId": null,
+      "forwarded": false,
+      "forwardedFromId": null,
+      "pinned": false,
+      "deliveredAt": "2026-06-01T06:51:17.357Z",
+      "readAt": null,
+      "createdAt": "2026-06-01T06:51:17.359Z",
+      "updatedAt": "2026-06-01T06:51:17.359Z"
+    },
+    {
+      "id": "a3842132-04c6-42cb-89b3-155a15a722f3",
+      "matchId": "match-1",
+      "senderId": "mentor-1",
+      "receiverId": "learner-1",
+      "body": "e",
+      "replyToId": null,
+      "forwarded": false,
+      "forwardedFromId": null,
+      "pinned": false,
+      "deliveredAt": "2026-06-01T06:51:17.534Z",
+      "readAt": null,
+      "createdAt": "2026-06-01T06:51:17.537Z",
+      "updatedAt": "2026-06-01T06:51:17.537Z"
+    },
+    {
+      "id": "ef7a6762-877c-4737-987f-2065efb425c1",
+      "matchId": "match-1",
+      "senderId": "mentor-1",
+      "receiverId": "learner-1",
+      "body": "e",
+      "replyToId": null,
+      "forwarded": false,
+      "forwardedFromId": null,
+      "pinned": false,
+      "deliveredAt": "2026-06-01T06:51:17.692Z",
+      "readAt": null,
+      "createdAt": "2026-06-01T06:51:17.694Z",
+      "updatedAt": "2026-06-01T06:51:17.694Z"
+    },
+    {
+      "id": "ba3d13e6-0681-44d8-88a3-3d20ad614436",
+      "matchId": "match-1",
+      "senderId": "mentor-1",
+      "receiverId": "learner-1",
+      "body": "e",
+      "replyToId": null,
+      "forwarded": false,
+      "forwardedFromId": null,
+      "pinned": false,
+      "deliveredAt": "2026-06-01T06:51:17.884Z",
+      "readAt": null,
+      "createdAt": "2026-06-01T06:51:17.886Z",
+      "updatedAt": "2026-06-01T06:51:17.886Z"
+    },
+    {
+      "id": "3cb28bd3-4ddc-4d71-a26d-c4463f74b893",
+      "matchId": "match-1",
+      "senderId": "mentor-1",
+      "receiverId": "learner-1",
+      "body": "e",
+      "replyToId": null,
+      "forwarded": false,
+      "forwardedFromId": null,
+      "pinned": false,
+      "deliveredAt": "2026-06-01T06:51:18.254Z",
+      "readAt": null,
+      "createdAt": "2026-06-01T06:51:18.255Z",
+      "updatedAt": "2026-06-01T06:51:18.255Z"
+    }
+  ],
+  "groupChats": [
+    {
+      "id": "a6328456-daec-4e6a-9511-1e39628d6956",
+      "name": "hi",
+      "ownerId": "learner-1",
+      "participantIds": [
+        "learner-1"
+      ],
+      "createdAt": "2026-05-31T16:48:03.889Z",
+      "updatedAt": "2026-05-31T17:09:44.347Z",
+      "moderators": []
+    }
+  ],
+  "groupChatMessages": [
+    {
+      "id": "d5bbe9d0-759b-4464-af69-bb625353234c",
+      "groupChatId": "a6328456-daec-4e6a-9511-1e39628d6956",
+      "senderId": "learner-1",
+      "body": "hi",
+      "readBy": [
+        "learner-1"
+      ],
+      "createdAt": "2026-05-31T16:48:08.464Z",
+      "updatedAt": "2026-05-31T16:48:08.464Z"
+    },
+    {
+      "id": "fbd4d869-829c-494e-886a-123a01733ff4",
+      "groupChatId": "a6328456-daec-4e6a-9511-1e39628d6956",
+      "senderId": "mentor-1",
+      "body": "f",
+      "readBy": [
+        "mentor-1"
+      ],
+      "createdAt": "2026-05-31T17:09:37.962Z",
+      "updatedAt": "2026-05-31T17:09:37.962Z"
+    }
+  ],
+  "reports": [
+    {
+      "id": "8b634592-b965-45d2-8821-dd4e82ade342",
+      "reporterId": "mentor-1",
+      "reportedUserId": "learner-2",
+      "targetType": "user",
+      "targetId": "learner-2",
+      "reason": "Safety concern",
+      "details": "Reported from swipe card.",
+      "status": "open",
+      "createdAt": "2026-06-01T06:49:56.596Z",
+      "updatedAt": "2026-06-01T06:49:56.596Z"
+    }
+  ],
+  "adminMessages": [
+    {
+      "id": "18bd071b-dd58-4d3d-850e-e465d7aa52c8",
+      "reportId": "71188d62-abf6-4f37-bffb-8c4f768bd4c0",
+      "adminId": "admin-1",
+      "recipientId": "learner-1",
+      "body": "Admin follow up",
+      "createdAt": "2026-05-31T16:28:07.166Z",
+      "updatedAt": "2026-05-31T16:28:07.166Z"
+    },
+    {
+      "id": "4310c8f1-645c-451d-b934-f65e19c37bf2",
+      "reportId": "71188d62-abf6-4f37-bffb-8c4f768bd4c0",
+      "adminId": "admin-1",
+      "recipientId": "learner-1",
+      "body": "BridgeUp admin is contacting you about a report.",
+      "createdAt": "2026-05-31T16:29:30.631Z",
+      "updatedAt": "2026-05-31T16:29:30.631Z"
+    },
+    {
+      "id": "e26305c1-afd1-470d-9a4c-c009930ba2c2",
+      "reportId": "71188d62-abf6-4f37-bffb-8c4f768bd4c0",
+      "adminId": "admin-1",
+      "recipientId": "learner-1",
+      "body": "BridgeUp admin is contacting you about a report.",
+      "createdAt": "2026-05-31T16:29:31.638Z",
+      "updatedAt": "2026-05-31T16:29:31.638Z"
+    },
+    {
+      "id": "14c49f4f-d5c4-4ba6-80a2-af5861ebf119",
+      "reportId": "71188d62-abf6-4f37-bffb-8c4f768bd4c0",
+      "adminId": "admin-1",
+      "recipientId": "learner-1",
+      "body": "BridgeUp admin is reviewing your report.",
+      "createdAt": "2026-05-31T16:29:32.424Z",
+      "updatedAt": "2026-05-31T16:29:32.424Z"
+    },
+    {
+      "id": "3860fb70-6b82-46e0-abb2-428a4f35f347",
+      "reportId": "71188d62-abf6-4f37-bffb-8c4f768bd4c0",
+      "adminId": "admin-1",
+      "recipientId": "learner-1",
+      "body": "BridgeUp admin is reviewing your report.",
+      "createdAt": "2026-05-31T16:29:32.712Z",
+      "updatedAt": "2026-05-31T16:29:32.712Z"
+    },
+    {
+      "id": "d4735867-e687-409c-801a-bf504393ac01",
+      "reportId": "71188d62-abf6-4f37-bffb-8c4f768bd4c0",
+      "adminId": "admin-1",
+      "recipientId": "learner-1",
+      "body": "BridgeUp admin is reviewing your report.",
+      "createdAt": "2026-05-31T16:29:32.884Z",
+      "updatedAt": "2026-05-31T16:29:32.884Z"
+    },
+    {
+      "id": "be85b0b5-01f5-4943-949c-6aa7d2952cc1",
+      "reportId": "71188d62-abf6-4f37-bffb-8c4f768bd4c0",
+      "adminId": "admin-1",
+      "recipientId": "learner-1",
+      "body": "BridgeUp admin is contacting you about a report.",
+      "createdAt": "2026-05-31T16:29:33.835Z",
+      "updatedAt": "2026-05-31T16:29:33.835Z"
+    },
+    {
+      "id": "1b43286f-b7d2-4b6e-9186-423f067dd158",
+      "reportId": "71188d62-abf6-4f37-bffb-8c4f768bd4c0",
+      "adminId": "admin-1",
+      "recipientId": "learner-1",
+      "body": "BridgeUp admin is reviewing your report.",
+      "createdAt": "2026-05-31T16:29:34.442Z",
+      "updatedAt": "2026-05-31T16:29:34.442Z"
+    },
+    {
+      "id": "32cc81bb-6b5e-4b35-82bf-7afdeb542c98",
+      "reportId": "71188d62-abf6-4f37-bffb-8c4f768bd4c0",
+      "adminId": "admin-1",
+      "recipientId": "learner-1",
+      "body": "BridgeUp admin is reviewing your report.",
+      "createdAt": "2026-05-31T16:29:34.604Z",
+      "updatedAt": "2026-05-31T16:29:34.604Z"
+    },
+    {
+      "id": "53214021-3498-4b1c-a2a0-a5d461f8ec3e",
+      "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
+      "adminId": "admin-1",
+      "recipientId": "mentor-1",
+      "body": "BridgeUp admin is contacting you about a report.",
+      "createdAt": "2026-05-31T16:29:37.417Z",
+      "updatedAt": "2026-05-31T16:29:37.417Z"
+    },
+    {
+      "id": "c0cc92c6-d91d-4081-9489-f27dd4df9f56",
+      "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
+      "adminId": "admin-1",
+      "recipientId": "mentor-1",
+      "body": "BridgeUp admin is contacting you about a report.",
+      "createdAt": "2026-05-31T16:29:37.637Z",
+      "updatedAt": "2026-05-31T16:29:37.637Z"
+    },
+    {
+      "id": "e3ebf334-ec1c-4c2a-b4c2-2d0de716d3ff",
+      "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
+      "adminId": "admin-1",
+      "recipientId": "learner-1",
+      "body": "BridgeUp admin is reviewing your report.",
+      "createdAt": "2026-05-31T16:29:37.970Z",
+      "updatedAt": "2026-05-31T16:29:37.970Z"
+    },
+    {
+      "id": "598858ca-64fb-4b77-93cd-3e0274fcb68e",
+      "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
+      "adminId": "admin-1",
+      "recipientId": "learner-1",
+      "body": "BridgeUp admin is reviewing your report.",
+      "createdAt": "2026-05-31T16:29:38.159Z",
+      "updatedAt": "2026-05-31T16:29:38.159Z"
+    },
+    {
+      "id": "567a2067-337f-4319-8ad0-e96360ad4bdb",
+      "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
+      "adminId": "admin-1",
+      "recipientId": "mentor-1",
+      "body": "BridgeUp admin is contacting you about a report.",
+      "createdAt": "2026-05-31T16:29:42.332Z",
+      "updatedAt": "2026-05-31T16:29:42.332Z"
+    },
+    {
+      "id": "09cdd870-868f-4345-a805-789b921f6980",
+      "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
+      "adminId": "admin-1",
+      "recipientId": "learner-1",
+      "body": "BridgeUp admin is reviewing your report.",
+      "createdAt": "2026-05-31T16:29:42.776Z",
+      "updatedAt": "2026-05-31T16:29:42.776Z"
+    },
+    {
+      "id": "4f3e17db-0c97-49cb-a298-b1016fdf0aaa",
+      "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
+      "adminId": "admin-1",
+      "recipientId": "mentor-1",
+      "body": "BridgeUp admin is contacting you about a report.",
+      "createdAt": "2026-05-31T16:29:43.039Z",
+      "updatedAt": "2026-05-31T16:29:43.039Z"
+    },
+    {
+      "id": "fd5b0125-3298-4bea-bbd6-d49212ad4d1d",
+      "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
+      "adminId": "admin-1",
+      "recipientId": "learner-1",
+      "body": "BridgeUp admin is reviewing your report.",
+      "createdAt": "2026-05-31T16:29:50.383Z",
+      "updatedAt": "2026-05-31T16:29:50.383Z"
+    },
+    {
+      "id": "a3019c2d-d3f4-40b5-956d-5c9d89f31815",
+      "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
+      "adminId": "admin-1",
+      "recipientId": "mentor-1",
+      "body": "BridgeUp admin is contacting you about a report.",
+      "createdAt": "2026-05-31T16:29:50.789Z",
+      "updatedAt": "2026-05-31T16:29:50.789Z"
+    },
+    {
+      "id": "aeb5fb1d-cfca-4420-b3b7-be618394f7ec",
+      "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
+      "adminId": "admin-1",
+      "recipientId": "learner-1",
+      "body": "BridgeUp admin is reviewing your report.",
+      "createdAt": "2026-05-31T16:29:51.080Z",
+      "updatedAt": "2026-05-31T16:29:51.080Z"
+    },
+    {
+      "id": "15bdee67-0ae8-4445-96d1-8ab2ed758bdd",
+      "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
+      "adminId": "admin-1",
+      "recipientId": "mentor-1",
+      "body": "BridgeUp admin is contacting you about a report.",
+      "createdAt": "2026-05-31T16:29:51.794Z",
+      "updatedAt": "2026-05-31T16:29:51.794Z"
+    }
+  ],
+  "workshops": [
+    {
+      "id": "workshop-1",
+      "hostId": "mentor-1",
+      "title": "Interview Confidence for First Jobs",
+      "description": "A gentle practice circle for youths preparing for interviews.",
+      "date": "2026-06-14",
+      "location": "National Library, Victoria Street",
+      "capacity": 20,
+      "attendees": [
+        "mentor-1"
+      ],
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T06:36:13.502Z"
+    },
+    {
+      "id": "workshop-2",
+      "hostId": "mentor-3",
+      "title": "Build a Portfolio That Opens Doors",
+      "description": "Hands-on review for design and tech portfolios.",
+      "date": "2026-06-21",
+      "location": "One Punggol",
+      "capacity": 16,
+      "attendees": [
+        "mentor-1"
+      ],
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T06:36:14.018Z"
+    }
+  ],
+  "events": [
+    {
+      "id": "event-1",
+      "title": "BridgeUp Community Tea",
+      "description": "Meet mentors, learners, and retirees in a relaxed intergenerational session.",
+      "date": "2026-06-08",
+      "location": "Tampines Regional Library",
+      "attendees": [],
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    }
+  ],
+  "groups": [
+    {
+      "id": "group-1",
+      "name": "Finance Starters",
+      "topic": "Finance",
+      "description": "Career guidance, interview prep, and workplace stories from banking mentors.",
+      "members": [
+        "learner-1"
+      ],
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "group-2",
+      "name": "Tech Portfolio Circle",
+      "topic": "Technology",
+      "description": "Feedback and encouragement for youth building digital portfolios.",
+      "members": [],
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    }
+  ],
+  "groupMessages": [
+    {
+      "id": "9b30d4ec-5a36-47a5-b387-dd72b3826e4e",
+      "groupId": "1f1bfc6f-9bb7-4bf9-9a9a-45833773e5e5",
+      "senderId": "mentor-1",
+      "body": "",
+      "edited": true,
+      "deleted": true,
+      "createdAt": "2026-05-31T16:57:03.643Z",
+      "updatedAt": "2026-05-31T16:57:10.605Z",
+      "deletedBy": "mentor-1",
+      "deletedNotice": "Mr Lim Wei Kiat deleted their message"
+    },
+    {
+      "id": "84bc0fc9-68a0-4d0e-9f34-a9f54cdfbcbe",
+      "groupId": "1f1bfc6f-9bb7-4bf9-9a9a-45833773e5e5",
+      "senderId": "mentor-1",
+      "body": "t",
+      "edited": false,
+      "deleted": false,
+      "createdAt": "2026-05-31T17:06:39.994Z",
+      "updatedAt": "2026-05-31T17:06:39.994Z"
+    },
+    {
+      "id": "6dff3f43-256c-46c3-814f-3a963df88a38",
+      "groupId": "1f1bfc6f-9bb7-4bf9-9a9a-45833773e5e5",
+      "senderId": "e0f4f093-4eec-45ae-bd7d-525002a760a3",
+      "body": "y",
+      "replyToId": null,
+      "forwarded": false,
+      "forwardedFromId": null,
+      "pinned": true,
+      "deliveredAt": "2026-06-01T04:31:45.590Z",
+      "edited": false,
+      "deleted": false,
+      "createdAt": "2026-06-01T04:31:45.594Z",
+      "updatedAt": "2026-06-01T04:45:44.414Z",
+      "pinnedBy": "e0f4f093-4eec-45ae-bd7d-525002a760a3",
+      "pinnedAt": "2026-06-01T04:45:44.410Z"
+    },
+    {
+      "id": "29300dd0-3a12-447b-8689-8faedb96366e",
+      "groupId": "1f1bfc6f-9bb7-4bf9-9a9a-45833773e5e5",
+      "senderId": "e0f4f093-4eec-45ae-bd7d-525002a760a3",
+      "body": "e",
+      "replyToId": null,
+      "forwarded": false,
+      "forwardedFromId": null,
+      "pinned": false,
+      "deliveredAt": "2026-06-01T04:45:24.213Z",
+      "edited": false,
+      "deleted": false,
+      "createdAt": "2026-06-01T04:45:24.217Z",
+      "updatedAt": "2026-06-01T04:45:24.217Z"
+    },
+    {
+      "id": "379c50fb-e5d9-47ec-a312-4ca611b37948",
+      "groupId": "1f1bfc6f-9bb7-4bf9-9a9a-45833773e5e5",
+      "senderId": "e0f4f093-4eec-45ae-bd7d-525002a760a3",
+      "body": "e",
+      "replyToId": null,
+      "forwarded": false,
+      "forwardedFromId": null,
+      "pinned": false,
+      "deliveredAt": "2026-06-01T04:45:25.020Z",
+      "edited": false,
+      "deleted": false,
+      "createdAt": "2026-06-01T04:45:25.025Z",
+      "updatedAt": "2026-06-01T04:45:25.025Z"
+    },
+    {
+      "id": "ac40e874-bd96-45c7-9adf-44c6e316ee88",
+      "groupId": "1f1bfc6f-9bb7-4bf9-9a9a-45833773e5e5",
+      "senderId": "e0f4f093-4eec-45ae-bd7d-525002a760a3",
+      "body": "e",
+      "replyToId": null,
+      "forwarded": false,
+      "forwardedFromId": null,
+      "pinned": false,
+      "deliveredAt": "2026-06-01T04:45:26.450Z",
+      "edited": false,
+      "deleted": false,
+      "createdAt": "2026-06-01T04:45:26.454Z",
+      "updatedAt": "2026-06-01T04:45:26.454Z"
+    }
+  ],
+  "userSettings": [
+    {
+      "id": "settings-learner-1",
+      "userId": "learner-1",
+      "largerText": false,
+      "reduceMotion": false,
+      "highContrast": false,
+      "language": "English",
+      "notifications": true,
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "settings-mentor-1",
+      "userId": "mentor-1",
+      "largerText": false,
+      "reduceMotion": false,
+      "highContrast": false,
+      "language": "English",
+      "notifications": true,
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "settings-mentor-2",
+      "userId": "mentor-2",
+      "largerText": false,
+      "reduceMotion": false,
+      "highContrast": false,
+      "language": "English",
+      "notifications": true,
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "settings-mentor-3",
+      "userId": "mentor-3",
+      "largerText": false,
+      "reduceMotion": false,
+      "highContrast": false,
+      "language": "English",
+      "notifications": true,
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "settings-learner-2",
+      "userId": "learner-2",
+      "largerText": false,
+      "reduceMotion": false,
+      "highContrast": false,
+      "language": "English",
+      "notifications": true,
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "settings-staff-1",
+      "userId": "staff-1",
+      "largerText": false,
+      "reduceMotion": false,
+      "highContrast": false,
+      "language": "English",
+      "notifications": true,
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "settings-admin-1",
+      "userId": "admin-1",
+      "largerText": false,
+      "reduceMotion": false,
+      "highContrast": false,
+      "language": "English",
+      "notifications": true,
+      "createdAt": "2026-06-01T05:28:22.978Z",
+      "updatedAt": "2026-06-01T05:28:22.978Z"
+    },
+    {
+      "id": "d7617deb-db40-4d36-8f9a-192e3d863361",
+      "userId": "21f28853-488f-4a5a-80b8-48e5e1265b21",
+      "largerText": false,
+      "reduceMotion": false,
+      "highContrast": false,
+      "language": "English",
+      "notifications": true,
+      "createdAt": "2026-06-01T05:42:16.162Z",
+      "updatedAt": "2026-06-01T05:42:16.162Z"
+    }
+  ]
+}
