@@ -57,6 +57,9 @@ export default function Messages() {
   const recorderRef = useRef(null);
   const recordingChunksRef = useRef([]);
   const callStartedAtRef = useRef(null);
+  const activeCallRef = useRef(null);
+  const ringTimerRef = useRef(null);
+  const audioContextRef = useRef(null);
 
   async function loadInbox() {
     try {
@@ -125,6 +128,11 @@ export default function Messages() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages.length]);
 
+  useEffect(() => () => {
+    stopRingTone();
+    stopLocalMedia();
+  }, []);
+
   useEffect(() => {
     const id = setInterval(async () => {
       try {
@@ -142,6 +150,52 @@ export default function Messages() {
     }, 2500);
     return () => clearInterval(id);
   }, [activeCall, user.id]);
+
+  useEffect(() => {
+    activeCallRef.current = activeCall;
+  }, [activeCall]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('bridgeup_token');
+    if (!token) return;
+    const stream = new EventSource(`${api.defaults.baseURL}/messages/calls/stream?token=${encodeURIComponent(token)}`);
+    stream.onmessage = async (event) => {
+      const payload = JSON.parse(event.data || '{}');
+      if (payload.event === 'call:start' && payload.call?.callerId !== user.id) {
+        setIncomingCall(payload.call);
+        startRingTone();
+      }
+      if (payload.event === 'call:accept' && payload.call?.id === activeCallRef.current?.id) {
+        setActiveCall(payload.call);
+        setCallStatus('Connected');
+        callStartedAtRef.current = payload.call.acceptedAt || new Date().toISOString();
+      }
+      if (payload.event === 'call:end' && payload.call?.id === activeCallRef.current?.id) {
+        stopRingTone();
+        setCallStatus('Ended');
+        setActiveCall(payload.call);
+        if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
+        stopLocalMedia();
+        setTimeout(() => setActiveCall(null), 900);
+        refreshActiveChat().catch(() => {});
+      }
+      if (payload.event === 'call:decline') {
+        stopRingTone();
+        if (payload.call?.id === activeCallRef.current?.id) {
+          setCallStatus(payload.call.status === 'declined' ? 'Declined' : 'Missed');
+          stopLocalMedia();
+          setTimeout(() => setActiveCall(null), 900);
+        }
+        if (payload.call?.id === incomingCall?.id) setIncomingCall(null);
+        refreshActiveChat().catch(() => {});
+      }
+      if (payload.event === 'call:signal' && payload.callId === activeCallRef.current?.id && payload.signal?.fromUserId !== user.id) {
+        handleSignal(payload.signal).catch(() => {});
+      }
+      if (payload.event === 'call:recording') refreshActiveChat().catch(() => {});
+    };
+    return () => stream.close();
+  }, [incomingCall?.id, refreshActiveChat, user.id]);
 
   useEffect(() => {
     if (!activeCall || activeCall.status !== 'connected') return;
@@ -167,6 +221,32 @@ export default function Messages() {
     peerRef.current = null;
   }
 
+  function playRingPulse() {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const context = audioContextRef.current || new AudioCtx();
+    audioContextRef.current = context;
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.frequency.value = 880;
+    gain.gain.value = 0.035;
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.18);
+  }
+
+  function startRingTone() {
+    if (ringTimerRef.current) return;
+    playRingPulse();
+    ringTimerRef.current = setInterval(playRingPulse, 1400);
+  }
+
+  function stopRingTone() {
+    clearInterval(ringTimerRef.current);
+    ringTimerRef.current = null;
+  }
+
   async function sendSignal(callId, type, payload) {
     await api.post(`/messages/calls/${callId}/signals`, { type, payload });
   }
@@ -174,7 +254,10 @@ export default function Messages() {
   function startRecording(stream, call) {
     if (!window.MediaRecorder || !stream) return;
     recordingChunksRef.current = [];
-    const recorder = new MediaRecorder(stream, { mimeType: stream.getVideoTracks().length ? 'video/webm' : 'audio/webm' });
+    const preferred = stream.getVideoTracks().length ? 'video/webm;codecs=vp8,opus' : 'audio/webm;codecs=opus';
+    const fallback = stream.getVideoTracks().length ? 'video/webm' : 'audio/webm';
+    const mimeType = MediaRecorder.isTypeSupported(preferred) ? preferred : MediaRecorder.isTypeSupported(fallback) ? fallback : '';
+    const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
     recorder.ondataavailable = (event) => {
       if (event.data?.size) recordingChunksRef.current.push(event.data);
     };
@@ -217,20 +300,24 @@ export default function Messages() {
     return peer;
   }
 
+  async function handleSignal(signal) {
+    const peer = peerRef.current;
+    if (!peer) return;
+    if (signal.type === 'offer') {
+      await peer.setRemoteDescription(new RTCSessionDescription(signal.payload));
+      const answer = await peer.createAnswer();
+      await peer.setLocalDescription(answer);
+      await sendSignal(activeCallRef.current.id, 'answer', answer);
+    }
+    if (signal.type === 'answer' && !peer.currentRemoteDescription) await peer.setRemoteDescription(new RTCSessionDescription(signal.payload));
+    if (signal.type === 'ice-candidate') await peer.addIceCandidate(new RTCIceCandidate(signal.payload));
+  }
+
   async function handleSignals(call) {
     const { data } = await api.get(`/messages/calls/${call.id}/signals`, { params: { since: signalCursorRef.current } });
     signalCursorRef.current = data.next;
     for (const signal of data.signals || []) {
-      const peer = peerRef.current;
-      if (!peer) return;
-      if (signal.type === 'offer') {
-        await peer.setRemoteDescription(new RTCSessionDescription(signal.payload));
-        const answer = await peer.createAnswer();
-        await peer.setLocalDescription(answer);
-        await sendSignal(call.id, 'answer', answer);
-      }
-      if (signal.type === 'answer') await peer.setRemoteDescription(new RTCSessionDescription(signal.payload));
-      if (signal.type === 'ice-candidate') await peer.addIceCandidate(new RTCIceCandidate(signal.payload));
+      await handleSignal(signal);
     }
   }
 
@@ -252,6 +339,7 @@ export default function Messages() {
       setActiveCall(data.call);
       setCallStatus('Calling');
       setCallSeconds(0);
+      startRingTone();
       await createPeer(data.call, stream, true);
     } catch {
       stopLocalMedia();
@@ -267,6 +355,7 @@ export default function Messages() {
       const { data } = await api.post(`/messages/calls/${call.id}/accept`);
       signalCursorRef.current = 0;
       setIncomingCall(null);
+      stopRingTone();
       setActiveCall(data.call);
       setCallStatus('Connected');
       callStartedAtRef.current = data.call.acceptedAt || new Date().toISOString();
@@ -279,6 +368,7 @@ export default function Messages() {
 
   async function declineIncomingCall(call) {
     await api.post(`/messages/calls/${call.id}/decline`);
+    stopRingTone();
     setIncomingCall(null);
     await refreshActiveChat();
   }
@@ -287,6 +377,7 @@ export default function Messages() {
     if (!activeCall) return;
     try {
       const { data } = await api.post(`/messages/calls/${activeCall.id}/end`);
+      stopRingTone();
       if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
       setCallStatus('Ended');
       setActiveCall(data.call);
@@ -901,7 +992,7 @@ function CallLogCard({ call, onDownload, formatDuration }) {
 function IncomingCallSheet({ call, participants, onAccept, onDecline }) {
   const caller = participants.find((person) => person.id === call.callerId) || call.caller;
   return (
-    <div className="fixed inset-0 z-[70] grid place-items-end bg-black/50 p-5 backdrop-blur-sm">
+    <div className="fixed inset-y-0 left-1/2 z-[70] grid w-full max-w-md -translate-x-1/2 place-items-end bg-black/50 p-5 backdrop-blur-sm">
       <section className="w-full rounded-[34px] bg-white p-6 text-center shadow-soft">
         <Avatar name={caller?.name || 'BridgeUp member'} src={caller?.photo || caller?.profile?.photo} className="mx-auto h-24 w-24 text-3xl" />
         <p className="mt-4 text-sm font-black uppercase text-brand-blue">Incoming {call.callType} call</p>
@@ -926,7 +1017,7 @@ function CallOverlay({ call, status, seconds, micMuted, cameraOff, speakerOn, lo
   const other = participants.find((person) => person.id !== call.callerId) || call.caller;
   const connected = call.status === 'connected' || call.status === 'completed';
   return (
-    <div className="fixed inset-0 z-[80] flex flex-col bg-brand-text text-white">
+    <div className="fixed inset-y-0 left-1/2 z-[80] flex w-full max-w-md -translate-x-1/2 flex-col bg-brand-text text-white shadow-soft">
       <div className="relative min-h-0 flex-1">
         {call.callType === 'video' ? (
           <>

@@ -1,4 +1,6 @@
 import { findOne, insert, list, remove, update } from '../services/fileStore.js';
+import { callEvents, emitCallEvent } from '../services/callEvents.js';
+import { verifyToken } from '../utils/auth.js';
 
 async function canUseMatch(userId, matchId) {
   const match = await findOne('matches', (item) => item.id === matchId && item.status === 'matched');
@@ -182,6 +184,38 @@ export async function activeCalls(req, res) {
   res.json({ calls: calls.map((call) => publicCall(call, users)) });
 }
 
+export async function callStream(req, res) {
+  const token = req.query.token;
+  if (!token) return res.status(401).json({ message: 'Authentication required.' });
+  let user;
+  try {
+    const payload = verifyToken(token);
+    user = await findOne('users', (item) => item.id === payload.sub && item.status !== 'removed');
+  } catch {
+    return res.status(401).json({ message: 'Invalid session.' });
+  }
+  if (!user) return res.status(401).json({ message: 'Invalid session.' });
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+
+  const send = (payload) => {
+    res.write(`data: ${JSON.stringify(payload)}\n\n`);
+  };
+  const heartbeat = setInterval(() => send({ event: 'heartbeat' }), 25000);
+  const listener = (payload) => send(payload);
+  callEvents.on(`call:${user.id}`, listener);
+  send({ event: 'connected' });
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    callEvents.off(`call:${user.id}`, listener);
+    res.end();
+  });
+}
+
 export async function startCall(req, res) {
   const scope = await chatScopeForUser(req.user.id, req.body.scopeType, req.body.scopeId);
   if (!scope) return res.status(403).json({ message: 'Calls are only available inside your chats.' });
@@ -209,7 +243,9 @@ export async function startCall(req, res) {
     recording: { status: 'none' }
   });
   const users = await list('users');
-  res.status(201).json({ call: publicCall(call, users) });
+  const decorated = publicCall(call, users);
+  emitCallEvent(call, 'call:start', { call: decorated });
+  res.status(201).json({ call: decorated });
 }
 
 export async function acceptCall(req, res) {
@@ -225,7 +261,9 @@ export async function acceptCall(req, res) {
     recording: call.recording?.status === 'none' ? { status: 'processing' } : call.recording
   });
   const users = await list('users');
-  res.json({ call: publicCall(updated, users) });
+  const decorated = publicCall(updated, users);
+  emitCallEvent(updated, 'call:accept', { call: decorated });
+  res.json({ call: decorated });
 }
 
 export async function declineCall(req, res) {
@@ -240,7 +278,9 @@ export async function declineCall(req, res) {
     recording: { status: 'none' }
   });
   const users = await list('users');
-  res.json({ call: publicCall(updated, users) });
+  const decorated = publicCall(updated, users);
+  emitCallEvent(updated, 'call:decline', { call: decorated });
+  res.json({ call: decorated });
 }
 
 export async function endCall(req, res) {
@@ -255,7 +295,9 @@ export async function endCall(req, res) {
     recording: completed ? { ...(call.recording || {}), status: call.recording?.status === 'ready' ? 'ready' : 'processing' } : { status: 'none' }
   });
   const users = await list('users');
-  res.json({ call: publicCall(updated, users) });
+  const decorated = publicCall(updated, users);
+  emitCallEvent(updated, 'call:end', { call: decorated });
+  res.json({ call: decorated });
 }
 
 export async function sendCallSignal(req, res) {
@@ -269,6 +311,7 @@ export async function sendCallSignal(req, res) {
     createdAt: new Date().toISOString()
   };
   const updated = await update('callSessions', call.id, { signals: [...(call.signals || []), signal] });
+  emitCallEvent(updated, 'call:signal', { signal, signalCount: updated.signals.length });
   res.status(201).json({ signal, signalCount: updated.signals.length });
 }
 
@@ -283,7 +326,7 @@ export async function callSignals(req, res) {
 export async function uploadCallRecording(req, res) {
   const call = await findOne('callSessions', (item) => item.id === req.params.callId && (item.participantIds || []).includes(req.user.id));
   if (!call) return res.status(404).json({ message: 'Call not found.' });
-  if (call.status !== 'completed') return res.status(400).json({ message: 'Recordings are only saved for completed calls.' });
+  if (!['completed', 'ended'].includes(call.status)) return res.status(400).json({ message: 'Recordings are only saved after a call ends.' });
   const dataUrl = String(req.body.dataUrl || '');
   if (!dataUrl.startsWith('data:')) return res.status(400).json({ message: 'Recording data is missing.' });
   const mimeType = req.body.mimeType || dataUrl.slice(5, dataUrl.indexOf(';')) || 'video/webm';
@@ -299,7 +342,9 @@ export async function uploadCallRecording(req, res) {
     }
   });
   const users = await list('users');
-  res.json({ call: publicCall(updated, users) });
+  const decorated = publicCall(updated, users);
+  emitCallEvent(updated, 'call:recording', { call: decorated });
+  res.json({ call: decorated });
 }
 
 export async function downloadCallRecording(req, res) {

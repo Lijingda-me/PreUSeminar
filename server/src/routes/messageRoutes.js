@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { acceptCall, activeCalls, callSignals, connectedPeople, createGroupChat, declineCall, deleteGroupChatMessage, deleteMessage, downloadCallRecording, editGroupChatMessage, editMessage, endCall, getGroupChatMessages, getMessages, leaveGroupChat, listGroupChats, pinGroupChatMessage, pinMessage, sendCallSignal, sendGroupChatMessage, sendMessage, startCall, toggleGroupModerator, updateGroupChat, uploadCallRecording } from '../controllers/messageController.js';
+import { acceptCall, activeCalls, callSignals, callStream, connectedPeople, createGroupChat, declineCall, deleteGroupChatMessage, deleteMessage, downloadCallRecording, editGroupChatMessage, editMessage, endCall, getGroupChatMessages, getMessages, leaveGroupChat, listGroupChats, pinGroupChatMessage, pinMessage, sendCallSignal, sendGroupChatMessage, sendMessage, startCall, toggleGroupModerator, updateGroupChat, uploadCallRecording } from '../controllers/messageController.js';
 import { requireAuth } from '../middleware/auth.js';
 
 export const messageRoutes = Router();
 
 messageRoutes.get('/connected/people', requireAuth, connectedPeople);
+messageRoutes.get('/calls/stream', callStream);
 messageRoutes.get('/calls/active', requireAuth, activeCalls);
 messageRoutes.post('/calls', requireAuth, startCall);
 messageRoutes.post('/calls/:callId/accept', requireAuth, acceptCall);
