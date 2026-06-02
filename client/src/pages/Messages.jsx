@@ -22,6 +22,7 @@ export default function Messages() {
   const [body, setBody] = useState('');
   const [showGroupForm, setShowGroupForm] = useState(false);
   const [groupName, setGroupName] = useState('');
+  const [creatingGroup, setCreatingGroup] = useState(false);
   const [selectedPeople, setSelectedPeople] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
   const [participants, setParticipants] = useState([]);
@@ -320,13 +321,24 @@ export default function Messages() {
 
   async function createGroupChat(event) {
     event.preventDefault();
-    const { data } = await api.post('/messages/group-chats', { name: groupName, participantIds: selectedPeople });
-    showToast('Group chat created');
-    setShowGroupForm(false);
-    setGroupName('');
-    setSelectedPeople([]);
-    await loadInbox();
-    window.location.href = `/messages/group/${data.chat.id}`;
+    if (!selectedPeople.length) {
+      showToast('Choose at least one connected person.', 'error');
+      return;
+    }
+    setCreatingGroup(true);
+    try {
+      const { data } = await api.post('/messages/group-chats', { name: groupName.trim(), participantIds: selectedPeople });
+      showToast('Group chat created');
+      setShowGroupForm(false);
+      setGroupName('');
+      setSelectedPeople([]);
+      await loadInbox();
+      navigate(`/messages/group/${data.chat.id}`);
+    } catch {
+      showToast('Group chat could not be created.', 'error');
+    } finally {
+      setCreatingGroup(false);
+    }
   }
 
   if (!matchId && !groupChatId) {
@@ -362,7 +374,12 @@ export default function Messages() {
                 })}
                 {!connected.length && <p className="rounded-2xl bg-brand-cream p-3 text-sm font-semibold text-brand-muted">Connect with someone first to add them to a group chat.</p>}
               </div>
-              <button className="touch w-full rounded-[22px] bg-brand-blue font-black text-white">Create group chat</button>
+              <button
+                disabled={creatingGroup || !selectedPeople.length}
+                className={`touch w-full rounded-[22px] font-black ${creatingGroup || !selectedPeople.length ? 'bg-brand-cream text-brand-muted' : 'bg-brand-blue text-white'}`}
+              >
+                {creatingGroup ? 'Creating...' : selectedPeople.length ? 'Create group chat' : 'Select someone first'}
+              </button>
             </form>
           </section>
         )}

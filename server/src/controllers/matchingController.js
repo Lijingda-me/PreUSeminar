@@ -98,7 +98,12 @@ async function createAcceptedMatch(request) {
   ]);
   const compatibility = calculateCompatibility(learnerProfile, mentorProfile);
   const existingMatch = await findOne('matches', (item) => item.learnerId === learner.id && item.mentorId === mentor.id);
-  return existingMatch || insert('matches', { learnerId: learner.id, mentorId: mentor.id, status: 'matched', ...compatibility });
+  if (existingMatch) {
+    return existingMatch.status === 'matched'
+      ? existingMatch
+      : update('matches', existingMatch.id, { status: 'matched', ...compatibility });
+  }
+  return insert('matches', { learnerId: learner.id, mentorId: mentor.id, status: 'matched', ...compatibility });
 }
 
 export async function inbox(req, res) {
