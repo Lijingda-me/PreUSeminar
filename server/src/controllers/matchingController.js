@@ -171,12 +171,14 @@ export async function declineRequest(req, res) {
 export async function matches(req, res) {
   const allMatches = await list('matches');
   const users = await list('users');
+  const messages = await list('messages');
   const relevant = allMatches
     .filter((match) => match.status === 'matched' && [match.learnerId, match.mentorId].includes(req.user.id))
     .map((match) => {
       const otherId = match.learnerId === req.user.id ? match.mentorId : match.learnerId;
       const other = users.find((user) => user.id === otherId);
-      return { ...match, other: other && { id: other.id, name: other.name, role: other.role } };
+      const unreadCount = messages.filter((message) => message.matchId === match.id && message.receiverId === req.user.id && !message.readAt).length;
+      return { ...match, unreadCount, other: other && { id: other.id, name: other.name, role: other.role } };
     });
   res.json({ matches: relevant });
 }

@@ -19,6 +19,7 @@ export default function Messages() {
   const [groupChats, setGroupChats] = useState([]);
   const [connected, setConnected] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [unreadHighlightIds, setUnreadHighlightIds] = useState([]);
   const [callLogs, setCallLogs] = useState([]);
   const [activeCall, setActiveCall] = useState(null);
   const [incomingCall, setIncomingCall] = useState(null);
@@ -88,6 +89,7 @@ export default function Messages() {
     if (matchId) {
       const { data } = await api.get(`/messages/${matchId}`, { silent: true });
       setMessages(data.messages || []);
+      if (data.unreadMessageIds?.length) setUnreadHighlightIds(data.unreadMessageIds);
       setCallLogs(data.calls || []);
       setParticipants(data.participants || []);
       setActiveChat({
@@ -100,6 +102,7 @@ export default function Messages() {
     if (groupChatId) {
       const { data } = await api.get(`/messages/group-chats/${groupChatId}`, { silent: true });
       setMessages(data.messages || []);
+      if (data.unreadMessageIds?.length) setUnreadHighlightIds(data.unreadMessageIds);
       setCallLogs(data.calls || []);
       setParticipants(data.participants || []);
       const about = data.chat?.about || 'A private group chat for connected BridgeUp members.';
@@ -119,6 +122,7 @@ export default function Messages() {
     setShowEmojiPicker(false);
     setActiveMessage(null);
     setReplyTarget(null);
+    setUnreadHighlightIds([]);
     if (!matchId && !groupChatId) return;
 
     refreshActiveChat().catch(() => showToast('Messages could not load right now.', 'error'));
@@ -132,6 +136,12 @@ export default function Messages() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages.length]);
+
+  useEffect(() => {
+    if (!unreadHighlightIds.length) return undefined;
+    const id = setTimeout(() => setUnreadHighlightIds([]), 9000);
+    return () => clearTimeout(id);
+  }, [unreadHighlightIds]);
 
   useEffect(() => () => {
     stopRingTone();
@@ -846,18 +856,22 @@ export default function Messages() {
 
         <div className="mt-6 grid gap-3">
           {groupChats.map((chat) => (
-            <Link key={chat.id} to={`/messages/group/${chat.id}`} className="ios-card flex items-center gap-3 p-4">
+            <Link key={chat.id} to={`/messages/group/${chat.id}`} className={`ios-card flex items-center gap-3 p-4 ${chat.unreadCount ? 'border border-brand-blue/20 bg-brand-blue/10 shadow-[0_16px_38px_rgba(37,99,235,0.16)]' : ''}`}>
               <div className="grid h-12 w-12 place-items-center rounded-full bg-brand-blue text-white"><UsersRound /></div>
               <div className="min-w-0 flex-1">
                 <b className="block truncate">{chat.name}</b>
                 <p className="truncate text-sm text-brand-muted">{chat.participants?.map((person) => person.name).join(', ')}</p>
               </div>
+              {chat.unreadCount > 0 && <span className="grid min-h-6 min-w-6 place-items-center rounded-full bg-brand-blue px-2 text-xs font-black text-white">{chat.unreadCount}</span>}
             </Link>
           ))}
           {matches.map((match) => (
-            <Link key={match.id} to={`/messages/${match.id}`} className="ios-card block p-4">
-              <b>{match.other?.name}</b>
-              <p className="text-sm text-brand-muted">Mutual match - {match.score}% compatibility</p>
+            <Link key={match.id} to={`/messages/${match.id}`} className={`ios-card flex items-center justify-between gap-3 p-4 ${match.unreadCount ? 'border border-brand-blue/20 bg-brand-blue/10 shadow-[0_16px_38px_rgba(37,99,235,0.16)]' : ''}`}>
+              <span className="min-w-0">
+                <b className="block truncate">{match.other?.name}</b>
+                <p className="text-sm text-brand-muted">Mutual match - {match.score}% compatibility</p>
+              </span>
+              {match.unreadCount > 0 && <span className="grid min-h-6 min-w-6 place-items-center rounded-full bg-brand-blue px-2 text-xs font-black text-white">{match.unreadCount}</span>}
             </Link>
           ))}
           {!matches.length && !groupChats.length && <div className="ios-card p-6 text-center">Match first, then message.</div>}
@@ -983,6 +997,7 @@ export default function Messages() {
             const message = item.message;
             const mine = message.senderId === user.id;
             const replied = message.replyToId ? messageById(message.replyToId) : null;
+            const unread = unreadHighlightIds.includes(message.id);
             return (
               <button
                 key={item.id}
@@ -998,7 +1013,7 @@ export default function Messages() {
                 {!mine && <Avatar name={senderName(message)} src={senderPhoto(message)} className="h-9 w-9 shrink-0 text-sm" />}
                 <div className="min-w-0 max-w-[78%]">
                   <p className={`mb-1 px-1 text-xs font-bold text-brand-muted ${mine ? 'text-right' : ''}`}>{senderName(message)}</p>
-                  <div data-message-bubble className={`rounded-[24px] px-4 py-3 text-[15px] font-semibold leading-6 shadow-[0_10px_28px_rgba(20,28,45,0.08)] transition ${activeMessage?.message.id === message.id ? 'ring-4 ring-brand-blue/25 scale-[1.01]' : ''} ${mine ? 'rounded-br-md bg-brand-blue text-white' : 'rounded-bl-md bg-white text-brand-text'}`}>
+                  <div data-message-bubble className={`rounded-[24px] px-4 py-3 text-[15px] font-semibold leading-6 shadow-[0_10px_28px_rgba(20,28,45,0.08)] transition ${unread ? 'ring-4 ring-brand-blue/20 bg-brand-blue/10' : ''} ${activeMessage?.message.id === message.id ? 'ring-4 ring-brand-blue/25 scale-[1.01]' : ''} ${mine ? 'rounded-br-md bg-brand-blue text-white' : unread ? 'rounded-bl-md text-brand-text' : 'rounded-bl-md bg-white text-brand-text'}`}>
                     {message.forwarded && <p className="mb-1 text-xs font-black opacity-75">Forwarded</p>}
                     {replied && <div className={`mb-2 rounded-2xl border-l-4 px-3 py-2 text-xs ${mine ? 'border-white/70 bg-white/15' : 'border-brand-blue bg-brand-cream'}`}>{senderName(replied)}: {replied.body}</div>}
                     <p>{message.deleted ? message.deletedNotice : message.body}</p>

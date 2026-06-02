@@ -55,6 +55,9 @@ export async function getMessages(req, res) {
   if (!match) return res.status(403).json({ message: 'Messages are only available for mutual matches.' });
   const context = await messageContext();
   const chatMessages = (await list('messages')).filter((item) => item.matchId === match.id);
+  const unreadMessageIds = chatMessages
+    .filter((message) => message.receiverId === req.user.id && !message.readAt)
+    .map((message) => message.id);
   const now = new Date().toISOString();
   await Promise.all(chatMessages
     .filter((message) => message.receiverId === req.user.id && !message.readAt)
@@ -69,6 +72,7 @@ export async function getMessages(req, res) {
     match,
     other: participants.find((participant) => participant.id === otherId) || null,
     participants,
+    unreadMessageIds,
     messages: messages.map((message) => decorateMessage(message, context)),
     calls: await callsForScope('match', match.id, req.user.id)
   });
@@ -372,10 +376,16 @@ export async function connectedPeople(req, res) {
 
 export async function listGroupChats(req, res) {
   const chats = (await list('groupChats')).filter((chat) => (chat.participantIds || []).includes(req.user.id));
+  const groupMessages = await list('groupChatMessages');
   const context = await messageContext();
   res.json({
     chats: chats.map((chat) => ({
       ...chat,
+      unreadCount: groupMessages.filter((message) =>
+        message.groupChatId === chat.id
+        && message.senderId !== req.user.id
+        && !(message.readBy || []).includes(req.user.id)
+      ).length,
       participants: context.users
         .filter((user) => (chat.participantIds || []).includes(user.id))
         .map((user) => decorateParticipant(user, context.mentorProfiles, context.learnerProfiles, chat))
@@ -447,6 +457,9 @@ export async function getGroupChatMessages(req, res) {
   if (!chat) return res.status(404).json({ message: 'Group chat not found.' });
   const context = await messageContext();
   const chatMessages = (await list('groupChatMessages')).filter((message) => message.groupChatId === chat.id);
+  const unreadMessageIds = chatMessages
+    .filter((message) => message.senderId !== req.user.id && !(message.readBy || []).includes(req.user.id))
+    .map((message) => message.id);
   await Promise.all(chatMessages
     .filter((message) => message.senderId !== req.user.id && !(message.readBy || []).includes(req.user.id))
     .map((message) => update('groupChatMessages', message.id, { readBy: Array.from(new Set([...(message.readBy || []), req.user.id])) })));
@@ -457,6 +470,7 @@ export async function getGroupChatMessages(req, res) {
   res.json({
     chat,
     participants,
+    unreadMessageIds,
     messages: messages.map((message) => decorateMessage(message, context)),
     calls: await callsForScope('group', chat.id, req.user.id)
   });

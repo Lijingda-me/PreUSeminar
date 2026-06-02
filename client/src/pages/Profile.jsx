@@ -210,13 +210,17 @@ export default function Profile() {
                 <X size={18} />
               </button>
             </div>
-            <div className="mt-4 flex gap-2 rounded-[22px] bg-brand-cream p-2">
-              <input className="min-w-0 flex-1 bg-transparent px-2 text-sm font-semibold outline-none" value={shareUrl} readOnly onFocus={(event) => event.target.select()} />
-              <button onClick={copyShareLink} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-blue text-white" aria-label="Copy profile link">
+            <button
+              type="button"
+              onClick={copyShareLink}
+              className="mt-4 flex w-full items-center gap-2 rounded-[22px] bg-brand-cream p-2 text-left"
+              aria-label="Copy profile link"
+            >
+              <span className="min-w-0 flex-1 truncate px-2 text-sm font-semibold text-brand-text">{shareUrl}</span>
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-blue text-white">
                 <Copy size={18} />
-              </button>
-            </div>
-            <button onClick={copyShareLink} className="mt-4 h-12 w-full rounded-full bg-brand-blue text-sm font-black text-white">Copy Link</button>
+              </span>
+            </button>
           </section>
         </div>
       )}
