@@ -22,7 +22,9 @@ api.interceptors.response.use(
         window.location.replace('/login');
       }
     }
-    useToastStore.getState().showToast(message, 'error');
+    if (!error.config?.silent) {
+      useToastStore.getState().showToast(message, 'error');
+    }
     return Promise.reject(error);
   }
 );

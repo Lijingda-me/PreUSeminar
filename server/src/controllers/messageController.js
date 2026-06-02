@@ -200,6 +200,7 @@ export async function callStream(req, res) {
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
   res.flushHeaders?.();
+  res.write('retry: 10000\n\n');
 
   const send = (payload) => {
     res.write(`data: ${JSON.stringify(payload)}\n\n`);

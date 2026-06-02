@@ -61,15 +61,16 @@ export default function Messages() {
   const recordingAudioContextRef = useRef(null);
   const callStartedAtRef = useRef(null);
   const activeCallRef = useRef(null);
+  const callStreamConnectedRef = useRef(false);
   const ringTimerRef = useRef(null);
   const audioContextRef = useRef(null);
 
   async function loadInbox() {
     try {
       const [matchRes, groupRes, connectedRes] = await Promise.all([
-        api.get('/matching/matches'),
-        api.get('/messages/group-chats'),
-        api.get('/messages/connected/people')
+        api.get('/matching/matches', { silent: true }),
+        api.get('/messages/group-chats', { silent: true }),
+        api.get('/messages/connected/people', { silent: true })
       ]);
       setMatches(matchRes.data.matches || []);
       setGroupChats(groupRes.data.chats || []);
@@ -85,7 +86,7 @@ export default function Messages() {
 
   const refreshActiveChat = useCallback(async () => {
     if (matchId) {
-      const { data } = await api.get(`/messages/${matchId}`);
+      const { data } = await api.get(`/messages/${matchId}`, { silent: true });
       setMessages(data.messages || []);
       setCallLogs(data.calls || []);
       setParticipants(data.participants || []);
@@ -97,7 +98,7 @@ export default function Messages() {
       return;
     }
     if (groupChatId) {
-      const { data } = await api.get(`/messages/group-chats/${groupChatId}`);
+      const { data } = await api.get(`/messages/group-chats/${groupChatId}`, { silent: true });
       setMessages(data.messages || []);
       setCallLogs(data.calls || []);
       setParticipants(data.participants || []);
@@ -122,8 +123,9 @@ export default function Messages() {
 
     refreshActiveChat().catch(() => showToast('Messages could not load right now.', 'error'));
     const id = setInterval(() => {
+      if (activeCallRef.current) return;
       refreshActiveChat().catch(() => {});
-    }, 2500);
+    }, 10000);
     return () => clearInterval(id);
   }, [matchId, groupChatId, refreshActiveChat, showToast]);
 
@@ -138,22 +140,26 @@ export default function Messages() {
 
   useEffect(() => {
     const id = setInterval(async () => {
+      if (callStreamConnectedRef.current) return;
       try {
-        const { data } = await api.get('/messages/calls/active');
+        const { data } = await api.get('/messages/calls/active', { silent: true });
         const incoming = (data.calls || []).find((call) => call.callerId !== user.id && call.status === 'ringing');
-        if (incoming && !activeCall) setIncomingCall(incoming);
-        const current = activeCall && (data.calls || []).find((call) => call.id === activeCall.id);
+        if (incoming && !activeCallRef.current) {
+          setIncomingCall(incoming);
+          startRingTone();
+        }
+        const current = activeCallRef.current && (data.calls || []).find((call) => call.id === activeCallRef.current.id);
         if (current) {
           setActiveCall(current);
           setCallStatus(current.status === 'connected' ? 'Connected' : 'Ringing');
           if (current.status === 'connected') stopRingTone();
         }
       } catch {
-        // Polling should never interrupt the chat.
+        // Fallback polling is intentionally silent.
       }
-    }, 2500);
+    }, 30000);
     return () => clearInterval(id);
-  }, [activeCall, user.id]);
+  }, [user.id]);
 
   useEffect(() => {
     activeCallRef.current = activeCall;
@@ -165,6 +171,10 @@ export default function Messages() {
     const stream = new EventSource(`${api.defaults.baseURL}/messages/calls/stream?token=${encodeURIComponent(token)}`);
     stream.onmessage = async (event) => {
       const payload = JSON.parse(event.data || '{}');
+      if (payload.event === 'connected' || payload.event === 'heartbeat') {
+        callStreamConnectedRef.current = true;
+        return;
+      }
       if (payload.event === 'call:start' && payload.call?.callerId !== user.id) {
         setIncomingCall(payload.call);
         startRingTone();
@@ -199,7 +209,13 @@ export default function Messages() {
       }
       if (payload.event === 'call:recording') refreshActiveChat().catch(() => {});
     };
-    return () => stream.close();
+    stream.onerror = () => {
+      callStreamConnectedRef.current = false;
+    };
+    return () => {
+      callStreamConnectedRef.current = false;
+      stream.close();
+    };
   }, [incomingCall?.id, refreshActiveChat, user.id]);
 
   useEffect(() => {
@@ -418,7 +434,7 @@ export default function Messages() {
   }
 
   async function handleSignals(call) {
-    const { data } = await api.get(`/messages/calls/${call.id}/signals`, { params: { since: signalCursorRef.current } });
+    const { data } = await api.get(`/messages/calls/${call.id}/signals`, { params: { since: signalCursorRef.current }, silent: true });
     signalCursorRef.current = data.next;
     for (const signal of data.signals || []) {
       await handleSignal(signal);
@@ -427,7 +443,7 @@ export default function Messages() {
 
   useEffect(() => {
     if (!activeCall) return;
-    const id = setInterval(() => handleSignals(activeCall).catch(() => {}), 1200);
+    const id = setInterval(() => handleSignals(activeCall).catch(() => {}), 3000);
     return () => clearInterval(id);
   }, [activeCall]);
 
