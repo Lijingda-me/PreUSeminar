@@ -18,7 +18,7 @@ export default function Auth({ mode }) {
   const { login, register, loading, error } = useAuthStore();
   const showToast = useToastStore((state) => state.showToast);
   const initialRole = ['learner', 'mentor', 'staff', 'admin'].includes(searchParams.get('role')) ? searchParams.get('role') : 'learner';
-  const [form, setForm] = useState({ name: '', email: isSignup ? '' : 'learner@bridgeup.sg', password: isSignup ? '' : 'BridgeUp123!', role: initialRole });
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: initialRole });
 
   async function submit(event) {
     event.preventDefault();

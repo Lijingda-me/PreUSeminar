@@ -184,7 +184,15 @@ export async function search(req, res) {
   const target = req.user.role === 'learner' ? 'mentorProfiles' : 'learnerProfiles';
   const profiles = await list(target);
   const users = await list('users');
+  const requests = await list('matchRequests');
+  const matches = await list('matches');
   const userProfile = await currentProfile(req.user);
+  const outgoingPending = new Set(requests
+    .filter((request) => request.fromUserId === req.user.id && request.action === 'connect' && request.status === 'pending')
+    .map((request) => request.toUserId));
+  const connectedIds = new Set(matches
+    .filter((match) => match.status === 'matched' && [match.learnerId, match.mentorId].includes(req.user.id))
+    .map((match) => match.learnerId === req.user.id ? match.mentorId : match.learnerId));
   const intentTerms = expandSearch(q);
   const results = profiles.map((profile) => {
     const user = users.find((item) => item.id === profile.userId);
@@ -206,7 +214,13 @@ export async function search(req, res) {
         ? calculateCompatibility(userProfile, profile)
         : calculateCompatibility(profile, userProfile)
       : { score: 70, explanation: 'Search result based on your interests.' };
-    return { profile, user: user && { id: user.id, name: user.name, role: user.role }, compatibility, relevance };
+    return {
+      profile,
+      user: user && { id: user.id, name: user.name, role: user.role },
+      compatibility,
+      relevance,
+      requestStatus: outgoingPending.has(profile.userId) ? 'pending' : connectedIds.has(profile.userId) ? 'connected' : 'none'
+    };
   }).filter((item) => {
     const industryOk = !industry || (item.profile.industries || []).join(' ').toLowerCase().includes(industry);
     const queryOk = !q || item.relevance > 0;

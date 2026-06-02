@@ -95,8 +95,10 @@ export default function SearchPage() {
   }
 
   async function connect(candidate) {
+    if (candidate.requestStatus === 'pending' || candidate.requestStatus === 'connected') return;
     try {
       await api.post('/matching/swipe', { targetUserId: candidate.user.id, action: 'connect' });
+      setResults((items) => items.map((item) => item.user.id === candidate.user.id ? { ...item, requestStatus: 'pending' } : item));
       showToast('Request sent');
     } catch {
       showToast('Request could not be sent.', 'error');
@@ -259,6 +261,8 @@ function EventCard({ eventItem, loading, onToggle }) {
 
 function MentorResult({ candidate, saved, onSave, onConnect }) {
   const { user, profile, compatibility } = candidate;
+  const requested = candidate.requestStatus === 'pending';
+  const connected = candidate.requestStatus === 'connected';
   return (
     <article className="rounded-[24px] bg-white p-3 shadow-soft">
       <div className="flex gap-3">
@@ -281,7 +285,13 @@ function MentorResult({ candidate, saved, onSave, onConnect }) {
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2">
         <Link to={`/profiles/${user.id}`} state={{ candidate }} className="grid h-11 place-items-center rounded-full bg-brand-cream text-sm font-black text-brand-blue">View Profile</Link>
-        <button onClick={onConnect} className="h-11 rounded-full bg-brand-blue text-sm font-black text-white">Connect</button>
+        <button
+          onClick={onConnect}
+          disabled={requested || connected}
+          className={`h-11 rounded-full text-sm font-black ${requested || connected ? 'bg-brand-cream text-brand-muted' : 'bg-brand-blue text-white'}`}
+        >
+          {connected ? 'Connected' : requested ? 'Requested' : 'Connect'}
+        </button>
       </div>
     </article>
   );

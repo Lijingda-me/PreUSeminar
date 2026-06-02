@@ -84,7 +84,7 @@ export default function Messages() {
       });
       setAboutDraft(about);
     }
-  }, [matchId, groupChatId, refreshActiveChat, showToast]);
+  }, [matchId, groupChatId]);
 
   useEffect(() => {
     setShowGroupInfo(false);
@@ -98,7 +98,7 @@ export default function Messages() {
       refreshActiveChat().catch(() => {});
     }, 2500);
     return () => clearInterval(id);
-  }, [matchId, groupChatId]);
+  }, [matchId, groupChatId, refreshActiveChat, showToast]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
