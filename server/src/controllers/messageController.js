@@ -67,7 +67,8 @@ export async function getMessages(req, res) {
     match,
     other: participants.find((participant) => participant.id === otherId) || null,
     participants,
-    messages: messages.map((message) => decorateMessage(message, context))
+    messages: messages.map((message) => decorateMessage(message, context)),
+    calls: await callsForScope('match', match.id, req.user.id)
   });
 }
 
@@ -129,6 +130,188 @@ async function connectedUserIds(userId) {
   return matches
     .filter((match) => match.status === 'matched' && [match.learnerId, match.mentorId].includes(userId))
     .map((match) => match.learnerId === userId ? match.mentorId : match.learnerId);
+}
+
+async function chatScopeForUser(userId, scopeType, scopeId) {
+  if (scopeType === 'match') {
+    const match = await canUseMatch(userId, scopeId);
+    if (!match) return null;
+    return { scopeType, scopeId: match.id, participantIds: [match.learnerId, match.mentorId], title: 'Mentorship chat' };
+  }
+  if (scopeType === 'group') {
+    const chat = await findOne('groupChats', (item) => item.id === scopeId && (item.participantIds || []).includes(userId));
+    if (!chat) return null;
+    return { scopeType, scopeId: chat.id, participantIds: chat.participantIds || [], title: chat.name || 'BridgeUp group chat' };
+  }
+  return null;
+}
+
+function callDuration(call) {
+  if (call.durationSeconds) return call.durationSeconds;
+  if (!call.acceptedAt || !call.endedAt) return 0;
+  return Math.max(0, Math.round((new Date(call.endedAt).getTime() - new Date(call.acceptedAt).getTime()) / 1000));
+}
+
+function publicCall(call, users = []) {
+  const caller = safeUser(users.find((user) => user.id === call.callerId));
+  return {
+    ...call,
+    caller,
+    durationSeconds: callDuration(call),
+    recording: call.recording ? {
+      status: call.recording.status,
+      filename: call.recording.filename,
+      mimeType: call.recording.mimeType
+    } : { status: call.status === 'completed' ? 'processing' : 'none' }
+  };
+}
+
+async function callsForScope(scopeType, scopeId, userId) {
+  const calls = await list('callSessions');
+  const users = await list('users');
+  return calls
+    .filter((call) => call.scopeType === scopeType && call.scopeId === scopeId && (call.participantIds || []).includes(userId))
+    .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)))
+    .map((call) => publicCall(call, users));
+}
+
+export async function activeCalls(req, res) {
+  const calls = (await list('callSessions'))
+    .filter((call) => (call.participantIds || []).includes(req.user.id) && ['ringing', 'connected'].includes(call.status));
+  const users = await list('users');
+  res.json({ calls: calls.map((call) => publicCall(call, users)) });
+}
+
+export async function startCall(req, res) {
+  const scope = await chatScopeForUser(req.user.id, req.body.scopeType, req.body.scopeId);
+  if (!scope) return res.status(403).json({ message: 'Calls are only available inside your chats.' });
+  if (!['voice', 'video'].includes(req.body.callType)) return res.status(400).json({ message: 'Choose voice or video call.' });
+  const existing = (await list('callSessions')).find((call) =>
+    call.scopeType === scope.scopeType
+    && call.scopeId === scope.scopeId
+    && ['ringing', 'connected'].includes(call.status)
+  );
+  if (existing) return res.status(409).json({ message: 'A call is already active in this chat.' });
+  const call = await insert('callSessions', {
+    scopeType: scope.scopeType,
+    scopeId: scope.scopeId,
+    callType: req.body.callType,
+    callerId: req.user.id,
+    participantIds: Array.from(new Set(scope.participantIds)),
+    status: 'ringing',
+    acceptedBy: [],
+    declinedBy: [],
+    startedAt: new Date().toISOString(),
+    acceptedAt: null,
+    endedAt: null,
+    durationSeconds: 0,
+    signals: [],
+    recording: { status: 'none' }
+  });
+  const users = await list('users');
+  res.status(201).json({ call: publicCall(call, users) });
+}
+
+export async function acceptCall(req, res) {
+  const call = await findOne('callSessions', (item) => item.id === req.params.callId && (item.participantIds || []).includes(req.user.id));
+  if (!call) return res.status(404).json({ message: 'Call not found.' });
+  if (!['ringing', 'connected'].includes(call.status)) return res.status(400).json({ message: 'This call is no longer active.' });
+  const now = new Date().toISOString();
+  const acceptedBy = Array.from(new Set([...(call.acceptedBy || []), req.user.id]));
+  const updated = await update('callSessions', call.id, {
+    status: 'connected',
+    acceptedBy,
+    acceptedAt: call.acceptedAt || now,
+    recording: call.recording?.status === 'none' ? { status: 'processing' } : call.recording
+  });
+  const users = await list('users');
+  res.json({ call: publicCall(updated, users) });
+}
+
+export async function declineCall(req, res) {
+  const call = await findOne('callSessions', (item) => item.id === req.params.callId && (item.participantIds || []).includes(req.user.id));
+  if (!call) return res.status(404).json({ message: 'Call not found.' });
+  const status = call.callerId === req.user.id ? 'missed' : 'declined';
+  const updated = await update('callSessions', call.id, {
+    status,
+    declinedBy: Array.from(new Set([...(call.declinedBy || []), req.user.id])),
+    endedAt: new Date().toISOString(),
+    durationSeconds: 0,
+    recording: { status: 'none' }
+  });
+  const users = await list('users');
+  res.json({ call: publicCall(updated, users) });
+}
+
+export async function endCall(req, res) {
+  const call = await findOne('callSessions', (item) => item.id === req.params.callId && (item.participantIds || []).includes(req.user.id));
+  if (!call) return res.status(404).json({ message: 'Call not found.' });
+  const now = new Date().toISOString();
+  const completed = call.status === 'connected';
+  const updated = await update('callSessions', call.id, {
+    status: completed ? 'completed' : 'missed',
+    endedAt: now,
+    durationSeconds: completed ? callDuration({ ...call, endedAt: now }) : 0,
+    recording: completed ? { ...(call.recording || {}), status: call.recording?.status === 'ready' ? 'ready' : 'processing' } : { status: 'none' }
+  });
+  const users = await list('users');
+  res.json({ call: publicCall(updated, users) });
+}
+
+export async function sendCallSignal(req, res) {
+  const call = await findOne('callSessions', (item) => item.id === req.params.callId && (item.participantIds || []).includes(req.user.id));
+  if (!call) return res.status(404).json({ message: 'Call not found.' });
+  const signal = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    fromUserId: req.user.id,
+    type: req.body.type,
+    payload: req.body.payload,
+    createdAt: new Date().toISOString()
+  };
+  const updated = await update('callSessions', call.id, { signals: [...(call.signals || []), signal] });
+  res.status(201).json({ signal, signalCount: updated.signals.length });
+}
+
+export async function callSignals(req, res) {
+  const call = await findOne('callSessions', (item) => item.id === req.params.callId && (item.participantIds || []).includes(req.user.id));
+  if (!call) return res.status(404).json({ message: 'Call not found.' });
+  const since = Number(req.query.since || 0);
+  const signals = (call.signals || []).slice(since).filter((signal) => signal.fromUserId !== req.user.id);
+  res.json({ signals, next: call.signals?.length || 0 });
+}
+
+export async function uploadCallRecording(req, res) {
+  const call = await findOne('callSessions', (item) => item.id === req.params.callId && (item.participantIds || []).includes(req.user.id));
+  if (!call) return res.status(404).json({ message: 'Call not found.' });
+  if (call.status !== 'completed') return res.status(400).json({ message: 'Recordings are only saved for completed calls.' });
+  const dataUrl = String(req.body.dataUrl || '');
+  if (!dataUrl.startsWith('data:')) return res.status(400).json({ message: 'Recording data is missing.' });
+  const mimeType = req.body.mimeType || dataUrl.slice(5, dataUrl.indexOf(';')) || 'video/webm';
+  const extension = mimeType.includes('audio') ? 'webm' : 'webm';
+  const updated = await update('callSessions', call.id, {
+    recording: {
+      status: 'ready',
+      mimeType,
+      dataUrl,
+      filename: `bridgeup-${call.callType}-call-${call.id}.${extension}`,
+      savedBy: req.user.id,
+      savedAt: new Date().toISOString()
+    }
+  });
+  const users = await list('users');
+  res.json({ call: publicCall(updated, users) });
+}
+
+export async function downloadCallRecording(req, res) {
+  const call = await findOne('callSessions', (item) => item.id === req.params.callId && (item.participantIds || []).includes(req.user.id));
+  if (!call) return res.status(404).json({ message: 'Recording not found.' });
+  if (call.recording?.status !== 'ready' || !call.recording.dataUrl) return res.status(404).json({ message: 'Recording is not ready yet.' });
+  const [, meta, data] = call.recording.dataUrl.match(/^data:(.+);base64,(.+)$/) || [];
+  if (!data) return res.status(500).json({ message: 'Recording could not be read.' });
+  const buffer = Buffer.from(data, 'base64');
+  res.setHeader('Content-Type', meta || call.recording.mimeType || 'video/webm');
+  res.setHeader('Content-Disposition', `attachment; filename="${call.recording.filename || 'bridgeup-call.webm'}"`);
+  res.send(buffer);
 }
 
 export async function connectedPeople(req, res) {
@@ -225,7 +408,12 @@ export async function getGroupChatMessages(req, res) {
   const participants = context.users
     .filter((user) => (chat.participantIds || []).includes(user.id))
     .map((user) => decorateParticipant(user, context.mentorProfiles, context.learnerProfiles, chat));
-  res.json({ chat, participants, messages: messages.map((message) => decorateMessage(message, context)) });
+  res.json({
+    chat,
+    participants,
+    messages: messages.map((message) => decorateMessage(message, context)),
+    calls: await callsForScope('group', chat.id, req.user.id)
+  });
 }
 
 export async function sendGroupChatMessage(req, res) {

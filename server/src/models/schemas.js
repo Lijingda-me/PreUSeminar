@@ -72,6 +72,23 @@ export const GroupChatMessageSchema = new mongoose.Schema({
   readBy: [String]
 }, { timestamps: true });
 
+export const CallSessionSchema = new mongoose.Schema({
+  scopeType: { type: String, enum: ['match', 'group'], required: true },
+  scopeId: String,
+  callType: { type: String, enum: ['voice', 'video'], required: true },
+  callerId: String,
+  participantIds: [String],
+  status: { type: String, enum: ['ringing', 'connected', 'completed', 'missed', 'declined', 'ended'], default: 'ringing' },
+  acceptedBy: [String],
+  declinedBy: [String],
+  startedAt: Date,
+  acceptedAt: Date,
+  endedAt: Date,
+  durationSeconds: { type: Number, default: 0 },
+  signals: [mongoose.Schema.Types.Mixed],
+  recording: mongoose.Schema.Types.Mixed
+}, { timestamps: true });
+
 export const ReportSchema = new mongoose.Schema({
   reporterId: String,
   reportedUserId: String,

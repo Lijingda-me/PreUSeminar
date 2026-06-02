@@ -1,7 +1,7 @@
 import React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Bookmark, Check, CheckCheck, Copy, CornerUpLeft, Edit3, Flag, Forward, Pin, Send, Shield, Smile, Trash2, UsersRound, X, ChevronLeft, Crown, Info, Plus } from 'lucide-react';
+import { Bookmark, Check, CheckCheck, Copy, CornerUpLeft, Download, Edit3, Flag, Forward, Mic, MicOff, Phone, PhoneOff, Pin, Send, Shield, Smile, Trash2, UsersRound, Video, VideoOff, Volume2, X, ChevronLeft, Crown, Info, Plus } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import Avatar from '../components/Avatar';
 import { api } from '../api/client';
@@ -19,6 +19,14 @@ export default function Messages() {
   const [groupChats, setGroupChats] = useState([]);
   const [connected, setConnected] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [callLogs, setCallLogs] = useState([]);
+  const [activeCall, setActiveCall] = useState(null);
+  const [incomingCall, setIncomingCall] = useState(null);
+  const [callStatus, setCallStatus] = useState('');
+  const [callSeconds, setCallSeconds] = useState(0);
+  const [micMuted, setMicMuted] = useState(false);
+  const [cameraOff, setCameraOff] = useState(false);
+  const [speakerOn, setSpeakerOn] = useState(true);
   const [body, setBody] = useState('');
   const [showGroupForm, setShowGroupForm] = useState(false);
   const [groupName, setGroupName] = useState('');
@@ -39,6 +47,16 @@ export default function Messages() {
   const longPressRef = useRef(null);
   const messageRefs = useRef({});
   const messagesEndRef = useRef(null);
+  const localVideoRef = useRef(null);
+  const remoteVideoRef = useRef(null);
+  const remoteAudioRef = useRef(null);
+  const localStreamRef = useRef(null);
+  const remoteStreamRef = useRef(null);
+  const peerRef = useRef(null);
+  const signalCursorRef = useRef(0);
+  const recorderRef = useRef(null);
+  const recordingChunksRef = useRef([]);
+  const callStartedAtRef = useRef(null);
 
   async function loadInbox() {
     try {
@@ -63,6 +81,7 @@ export default function Messages() {
     if (matchId) {
       const { data } = await api.get(`/messages/${matchId}`);
       setMessages(data.messages || []);
+      setCallLogs(data.calls || []);
       setParticipants(data.participants || []);
       setActiveChat({
         type: 'match',
@@ -74,6 +93,7 @@ export default function Messages() {
     if (groupChatId) {
       const { data } = await api.get(`/messages/group-chats/${groupChatId}`);
       setMessages(data.messages || []);
+      setCallLogs(data.calls || []);
       setParticipants(data.participants || []);
       const about = data.chat?.about || 'A private group chat for connected BridgeUp members.';
       setActiveChat({
@@ -104,6 +124,219 @@ export default function Messages() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages.length]);
+
+  useEffect(() => {
+    const id = setInterval(async () => {
+      try {
+        const { data } = await api.get('/messages/calls/active');
+        const incoming = (data.calls || []).find((call) => call.callerId !== user.id && call.status === 'ringing');
+        if (incoming && !activeCall) setIncomingCall(incoming);
+        const current = activeCall && (data.calls || []).find((call) => call.id === activeCall.id);
+        if (current) {
+          setActiveCall(current);
+          setCallStatus(current.status === 'connected' ? 'Connected' : 'Ringing');
+        }
+      } catch {
+        // Polling should never interrupt the chat.
+      }
+    }, 2500);
+    return () => clearInterval(id);
+  }, [activeCall, user.id]);
+
+  useEffect(() => {
+    if (!activeCall || activeCall.status !== 'connected') return;
+    if (!callStartedAtRef.current) callStartedAtRef.current = activeCall.acceptedAt || new Date().toISOString();
+    if (!recorderRef.current && localStreamRef.current) startRecording(localStreamRef.current, activeCall);
+    const id = setInterval(() => {
+      const start = callStartedAtRef.current || activeCall.acceptedAt || activeCall.startedAt;
+      setCallSeconds(Math.max(0, Math.floor((Date.now() - new Date(start).getTime()) / 1000)));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [activeCall]);
+
+  function callScope() {
+    if (matchId) return { scopeType: 'match', scopeId: matchId };
+    if (groupChatId) return { scopeType: 'group', scopeId: groupChatId };
+    return null;
+  }
+
+  function stopLocalMedia() {
+    localStreamRef.current?.getTracks().forEach((track) => track.stop());
+    localStreamRef.current = null;
+    peerRef.current?.close();
+    peerRef.current = null;
+  }
+
+  async function sendSignal(callId, type, payload) {
+    await api.post(`/messages/calls/${callId}/signals`, { type, payload });
+  }
+
+  function startRecording(stream, call) {
+    if (!window.MediaRecorder || !stream) return;
+    recordingChunksRef.current = [];
+    const recorder = new MediaRecorder(stream, { mimeType: stream.getVideoTracks().length ? 'video/webm' : 'audio/webm' });
+    recorder.ondataavailable = (event) => {
+      if (event.data?.size) recordingChunksRef.current.push(event.data);
+    };
+    recorder.onstop = async () => {
+      if (!recordingChunksRef.current.length) return;
+      const blob = new Blob(recordingChunksRef.current, { type: recorder.mimeType || 'video/webm' });
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          await api.post(`/messages/calls/${call.id}/recording`, { dataUrl: reader.result, mimeType: blob.type });
+          await refreshActiveChat();
+        } catch {
+          showToast('Recording could not be saved.', 'error');
+        }
+      };
+      reader.readAsDataURL(blob);
+    };
+    recorder.start();
+    recorderRef.current = recorder;
+  }
+
+  async function createPeer(call, stream, initiator) {
+    const peer = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    peerRef.current = peer;
+    remoteStreamRef.current = new MediaStream();
+    stream.getTracks().forEach((track) => peer.addTrack(track, stream));
+    peer.ontrack = (event) => {
+      event.streams[0]?.getTracks().forEach((track) => remoteStreamRef.current.addTrack(track));
+      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = remoteStreamRef.current;
+      if (remoteAudioRef.current) remoteAudioRef.current.srcObject = remoteStreamRef.current;
+    };
+    peer.onicecandidate = (event) => {
+      if (event.candidate) sendSignal(call.id, 'ice-candidate', event.candidate).catch(() => {});
+    };
+    if (initiator) {
+      const offer = await peer.createOffer();
+      await peer.setLocalDescription(offer);
+      await sendSignal(call.id, 'offer', offer);
+    }
+    return peer;
+  }
+
+  async function handleSignals(call) {
+    const { data } = await api.get(`/messages/calls/${call.id}/signals`, { params: { since: signalCursorRef.current } });
+    signalCursorRef.current = data.next;
+    for (const signal of data.signals || []) {
+      const peer = peerRef.current;
+      if (!peer) return;
+      if (signal.type === 'offer') {
+        await peer.setRemoteDescription(new RTCSessionDescription(signal.payload));
+        const answer = await peer.createAnswer();
+        await peer.setLocalDescription(answer);
+        await sendSignal(call.id, 'answer', answer);
+      }
+      if (signal.type === 'answer') await peer.setRemoteDescription(new RTCSessionDescription(signal.payload));
+      if (signal.type === 'ice-candidate') await peer.addIceCandidate(new RTCIceCandidate(signal.payload));
+    }
+  }
+
+  useEffect(() => {
+    if (!activeCall) return;
+    const id = setInterval(() => handleSignals(activeCall).catch(() => {}), 1200);
+    return () => clearInterval(id);
+  }, [activeCall]);
+
+  async function beginCall(callType) {
+    const scope = callScope();
+    if (!scope) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: callType === 'video' });
+      localStreamRef.current = stream;
+      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+      const { data } = await api.post('/messages/calls', { ...scope, callType });
+      signalCursorRef.current = 0;
+      setActiveCall(data.call);
+      setCallStatus('Calling');
+      setCallSeconds(0);
+      await createPeer(data.call, stream, true);
+    } catch {
+      stopLocalMedia();
+      showToast('Call could not be started. Check camera or microphone permission.', 'error');
+    }
+  }
+
+  async function acceptIncomingCall(call) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: call.callType === 'video' });
+      localStreamRef.current = stream;
+      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+      const { data } = await api.post(`/messages/calls/${call.id}/accept`);
+      signalCursorRef.current = 0;
+      setIncomingCall(null);
+      setActiveCall(data.call);
+      setCallStatus('Connected');
+      callStartedAtRef.current = data.call.acceptedAt || new Date().toISOString();
+      await createPeer(data.call, stream, false);
+      startRecording(stream, data.call);
+    } catch {
+      showToast('Call could not be accepted.', 'error');
+    }
+  }
+
+  async function declineIncomingCall(call) {
+    await api.post(`/messages/calls/${call.id}/decline`);
+    setIncomingCall(null);
+    await refreshActiveChat();
+  }
+
+  async function endActiveCall() {
+    if (!activeCall) return;
+    try {
+      const { data } = await api.post(`/messages/calls/${activeCall.id}/end`);
+      if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
+      setCallStatus('Ended');
+      setActiveCall(data.call);
+      setTimeout(() => setActiveCall(null), 900);
+      await refreshActiveChat();
+    } catch {
+      showToast('Call could not be ended cleanly.', 'error');
+      setActiveCall(null);
+    } finally {
+      stopLocalMedia();
+    }
+  }
+
+  async function switchCallType() {
+    if (!activeCall || activeCall.callType === 'video') return;
+    await endActiveCall();
+    beginCall('video');
+  }
+
+  function toggleMic() {
+    const enabled = micMuted;
+    localStreamRef.current?.getAudioTracks().forEach((track) => { track.enabled = enabled; });
+    setMicMuted(!micMuted);
+  }
+
+  function toggleCamera() {
+    const enabled = cameraOff;
+    localStreamRef.current?.getVideoTracks().forEach((track) => { track.enabled = enabled; });
+    setCameraOff(!cameraOff);
+  }
+
+  function formatDuration(seconds = 0) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${String(secs).padStart(2, '0')}`;
+  }
+
+  async function downloadRecording(call) {
+    try {
+      const { data } = await api.get(`/messages/calls/${call.id}/recording`, { responseType: 'blob' });
+      const url = URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = call.recording?.filename || `bridgeup-${call.callType}-call.webm`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      showToast('Recording is not ready or cannot be downloaded.', 'error');
+    }
+  }
 
   async function refreshGroupChat() {
     if (!groupChatId) return;
@@ -422,6 +655,12 @@ export default function Messages() {
             <h1 className="truncate text-[20px] font-black">{activeChat?.title || 'Messages'}</h1>
             <p className="truncate text-xs font-semibold text-brand-muted">{groupChatId ? `${participants.length} members` : activeChat?.about}</p>
           </button>
+          <button onClick={() => beginCall('voice')} className="grid h-11 w-11 place-items-center rounded-full bg-brand-cream text-brand-blue" aria-label="Start voice call">
+            <Phone size={19} />
+          </button>
+          <button onClick={() => beginCall('video')} className="grid h-11 w-11 place-items-center rounded-full bg-brand-blue text-white" aria-label="Start video call">
+            <Video size={19} />
+          </button>
           {groupChatId && (
             <button onClick={() => setShowGroupInfo(true)} className="grid h-11 w-11 place-items-center rounded-full bg-brand-blue text-white" aria-label="View group info">
               <Info size={20} />
@@ -510,6 +749,9 @@ export default function Messages() {
 
       <div className="mt-4 flex min-h-[72vh] flex-col pb-28">
         <div className="sleek-scrollbar max-h-[calc(100vh-210px)] flex-1 space-y-3 overflow-y-auto pb-4 pr-1">
+          {callLogs.map((call) => (
+            <CallLogCard key={call.id} call={call} onDownload={() => downloadRecording(call)} formatDuration={formatDuration} />
+          ))}
           {messages.filter((message) => !hiddenMessageIds.includes(message.id)).map((message) => {
             const mine = message.senderId === user.id;
             const replied = message.replyToId ? messageById(message.replyToId) : null;
@@ -597,7 +839,141 @@ export default function Messages() {
           onSubmit={forwardSelected}
         />
       )}
+      {incomingCall && (
+        <IncomingCallSheet
+          call={incomingCall}
+          user={user}
+          participants={participants}
+          onAccept={() => acceptIncomingCall(incomingCall)}
+          onDecline={() => declineIncomingCall(incomingCall)}
+        />
+      )}
+      {activeCall && (
+        <CallOverlay
+          call={activeCall}
+          status={callStatus}
+          seconds={callSeconds}
+          micMuted={micMuted}
+          cameraOff={cameraOff}
+          speakerOn={speakerOn}
+          localVideoRef={localVideoRef}
+          remoteVideoRef={remoteVideoRef}
+          remoteAudioRef={remoteAudioRef}
+          localStream={localStreamRef.current}
+          remoteStream={remoteStreamRef.current}
+          onToggleMic={toggleMic}
+          onToggleCamera={toggleCamera}
+          onToggleSpeaker={() => setSpeakerOn((value) => !value)}
+          onSwitchToVideo={switchCallType}
+          onEnd={endActiveCall}
+          formatDuration={formatDuration}
+          participants={participants}
+        />
+      )}
     </AppShell>
+  );
+}
+
+function CallLogCard({ call, onDownload, formatDuration }) {
+  const statusLabel = call.status === 'completed' ? 'Completed' : call.status === 'declined' ? 'Declined' : call.status === 'missed' ? 'Missed' : 'Ended';
+  const date = new Date(call.endedAt || call.startedAt || call.createdAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+  return (
+    <article className="mx-auto w-[92%] rounded-[22px] border border-brand-blue/10 bg-white p-4 text-center shadow-soft">
+      <div className="mx-auto mb-2 grid h-11 w-11 place-items-center rounded-full bg-brand-blue/10 text-brand-blue">
+        {call.callType === 'video' ? <Video size={19} /> : <Phone size={19} />}
+      </div>
+      <p className="text-sm font-black">{call.callType === 'video' ? 'Video' : 'Voice'} call - {statusLabel}</p>
+      <p className="mt-1 text-xs font-semibold text-brand-muted">{date} - {formatDuration(call.durationSeconds || 0)}</p>
+      {call.status === 'completed' && (
+        <button
+          onClick={onDownload}
+          disabled={call.recording?.status !== 'ready'}
+          className={`mt-3 inline-flex h-10 items-center gap-2 rounded-full px-4 text-xs font-black ${call.recording?.status === 'ready' ? 'bg-brand-blue text-white' : 'bg-brand-cream text-brand-muted'}`}
+        >
+          <Download size={15} />
+          {call.recording?.status === 'ready' ? 'Download Recording' : call.recording?.status === 'failed' ? 'Recording failed' : 'Recording processing...'}
+        </button>
+      )}
+    </article>
+  );
+}
+
+function IncomingCallSheet({ call, participants, onAccept, onDecline }) {
+  const caller = participants.find((person) => person.id === call.callerId) || call.caller;
+  return (
+    <div className="fixed inset-0 z-[70] grid place-items-end bg-black/50 p-5 backdrop-blur-sm">
+      <section className="w-full rounded-[34px] bg-white p-6 text-center shadow-soft">
+        <Avatar name={caller?.name || 'BridgeUp member'} src={caller?.photo || caller?.profile?.photo} className="mx-auto h-24 w-24 text-3xl" />
+        <p className="mt-4 text-sm font-black uppercase text-brand-blue">Incoming {call.callType} call</p>
+        <h2 className="mt-1 text-2xl font-black">{caller?.name || 'BridgeUp member'}</h2>
+        <p className="mt-2 text-sm font-semibold text-brand-muted">Ringing...</p>
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <button onClick={onDecline} className="h-14 rounded-full bg-brand-coral text-sm font-black text-white">Decline</button>
+          <button onClick={onAccept} className="h-14 rounded-full bg-brand-green text-sm font-black text-white">Accept</button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function CallOverlay({ call, status, seconds, micMuted, cameraOff, speakerOn, localVideoRef, remoteVideoRef, remoteAudioRef, localStream, remoteStream, onToggleMic, onToggleCamera, onToggleSpeaker, onSwitchToVideo, onEnd, formatDuration, participants }) {
+  useEffect(() => {
+    if (localVideoRef.current && localStream) localVideoRef.current.srcObject = localStream;
+    if (remoteVideoRef.current && remoteStream) remoteVideoRef.current.srcObject = remoteStream;
+    if (remoteAudioRef.current && remoteStream) remoteAudioRef.current.srcObject = remoteStream;
+  }, [localStream, remoteStream, localVideoRef, remoteVideoRef, remoteAudioRef]);
+
+  const other = participants.find((person) => person.id !== call.callerId) || call.caller;
+  const connected = call.status === 'connected' || call.status === 'completed';
+  return (
+    <div className="fixed inset-0 z-[80] flex flex-col bg-brand-text text-white">
+      <div className="relative min-h-0 flex-1">
+        {call.callType === 'video' ? (
+          <>
+            <video ref={remoteVideoRef} autoPlay playsInline className="h-full w-full object-cover" />
+            <video ref={localVideoRef} autoPlay muted playsInline className="absolute right-4 top-5 h-36 w-24 rounded-[22px] border-2 border-white/70 object-cover shadow-soft" />
+          </>
+        ) : (
+          <div className="grid h-full place-items-center px-6 text-center">
+            <div>
+              <Avatar name={other?.name || 'BridgeUp member'} src={other?.photo || other?.profile?.photo} className="mx-auto h-32 w-32 text-5xl" />
+              <h2 className="mt-5 text-3xl font-black">{other?.name || 'BridgeUp call'}</h2>
+              <p className="mt-2 text-sm font-bold uppercase tracking-[0.16em] text-white/65">{status || 'Calling'}</p>
+              <p className="mt-3 text-xl font-black">{connected ? formatDuration(seconds) : 'Ringing...'}</p>
+            </div>
+          </div>
+        )}
+        <audio ref={remoteAudioRef} autoPlay muted={!speakerOn} />
+        {call.callType === 'video' && (
+          <div className="absolute inset-x-0 top-5 px-5">
+            <h2 className="truncate text-2xl font-black drop-shadow">{other?.name || 'BridgeUp call'}</h2>
+            <p className="text-sm font-bold text-white/80 drop-shadow">{status || 'Calling'} - {connected ? formatDuration(seconds) : 'Ringing...'}</p>
+          </div>
+        )}
+      </div>
+      <div className="rounded-t-[34px] bg-white px-5 pb-7 pt-5 text-brand-text">
+        <div className="grid grid-cols-5 gap-2">
+          <CallControl active={micMuted} icon={micMuted ? MicOff : Mic} label={micMuted ? 'Muted' : 'Mute'} onClick={onToggleMic} />
+          <CallControl active={!speakerOn} icon={Volume2} label="Speaker" onClick={onToggleSpeaker} />
+          <button onClick={onEnd} className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-brand-coral text-white shadow-soft" aria-label="End call">
+            <PhoneOff />
+          </button>
+          <CallControl active={cameraOff} icon={cameraOff ? VideoOff : Video} label={cameraOff ? 'Camera off' : 'Camera'} onClick={onToggleCamera} disabled={call.callType !== 'video'} />
+          <CallControl icon={Video} label="Video" onClick={onSwitchToVideo} disabled={call.callType === 'video'} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CallControl({ icon: Icon, label, active, disabled, onClick }) {
+  return (
+    <button disabled={disabled} onClick={onClick} className={`flex flex-col items-center gap-1 text-[11px] font-black ${disabled ? 'text-brand-muted/40' : active ? 'text-brand-coral' : 'text-brand-muted'}`}>
+      <span className={`grid h-12 w-12 place-items-center rounded-full ${active ? 'bg-brand-coral/10' : 'bg-brand-cream'}`}>
+        <Icon size={19} />
+      </span>
+      {label}
+    </button>
   );
 }
 

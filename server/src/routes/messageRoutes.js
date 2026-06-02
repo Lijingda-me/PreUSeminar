@@ -1,10 +1,19 @@
 import { Router } from 'express';
-import { connectedPeople, createGroupChat, deleteGroupChatMessage, deleteMessage, editGroupChatMessage, editMessage, getGroupChatMessages, getMessages, leaveGroupChat, listGroupChats, pinGroupChatMessage, pinMessage, sendGroupChatMessage, sendMessage, toggleGroupModerator, updateGroupChat } from '../controllers/messageController.js';
+import { acceptCall, activeCalls, callSignals, connectedPeople, createGroupChat, declineCall, deleteGroupChatMessage, deleteMessage, downloadCallRecording, editGroupChatMessage, editMessage, endCall, getGroupChatMessages, getMessages, leaveGroupChat, listGroupChats, pinGroupChatMessage, pinMessage, sendCallSignal, sendGroupChatMessage, sendMessage, startCall, toggleGroupModerator, updateGroupChat, uploadCallRecording } from '../controllers/messageController.js';
 import { requireAuth } from '../middleware/auth.js';
 
 export const messageRoutes = Router();
 
 messageRoutes.get('/connected/people', requireAuth, connectedPeople);
+messageRoutes.get('/calls/active', requireAuth, activeCalls);
+messageRoutes.post('/calls', requireAuth, startCall);
+messageRoutes.post('/calls/:callId/accept', requireAuth, acceptCall);
+messageRoutes.post('/calls/:callId/decline', requireAuth, declineCall);
+messageRoutes.post('/calls/:callId/end', requireAuth, endCall);
+messageRoutes.get('/calls/:callId/signals', requireAuth, callSignals);
+messageRoutes.post('/calls/:callId/signals', requireAuth, sendCallSignal);
+messageRoutes.post('/calls/:callId/recording', requireAuth, uploadCallRecording);
+messageRoutes.get('/calls/:callId/recording', requireAuth, downloadCallRecording);
 messageRoutes.get('/group-chats', requireAuth, listGroupChats);
 messageRoutes.post('/group-chats', requireAuth, createGroupChat);
 messageRoutes.get('/group-chats/:groupChatId', requireAuth, getGroupChatMessages);

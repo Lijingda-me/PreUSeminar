@@ -18,6 +18,7 @@ const initialData = {
   messages: [],
   groupChats: [],
   groupChatMessages: [],
+  callSessions: [],
   reports: [],
   adminMessages: [],
   workshops: [],
