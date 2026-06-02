@@ -52,6 +52,11 @@ export async function getMessages(req, res) {
   const match = await canUseMatch(req.user.id, req.params.matchId);
   if (!match) return res.status(403).json({ message: 'Messages are only available for mutual matches.' });
   const context = await messageContext();
+  const chatMessages = (await list('messages')).filter((item) => item.matchId === match.id);
+  const now = new Date().toISOString();
+  await Promise.all(chatMessages
+    .filter((message) => message.receiverId === req.user.id && !message.readAt)
+    .map((message) => update('messages', message.id, { readAt: now })));
   const messages = (await list('messages')).filter((item) => item.matchId === match.id);
   const participantIds = [match.learnerId, match.mentorId];
   const participants = context.users
@@ -212,6 +217,10 @@ export async function getGroupChatMessages(req, res) {
   const chat = await findOne('groupChats', (item) => item.id === req.params.groupChatId && (item.participantIds || []).includes(req.user.id));
   if (!chat) return res.status(404).json({ message: 'Group chat not found.' });
   const context = await messageContext();
+  const chatMessages = (await list('groupChatMessages')).filter((message) => message.groupChatId === chat.id);
+  await Promise.all(chatMessages
+    .filter((message) => message.senderId !== req.user.id && !(message.readBy || []).includes(req.user.id))
+    .map((message) => update('groupChatMessages', message.id, { readBy: Array.from(new Set([...(message.readBy || []), req.user.id])) })));
   const messages = (await list('groupChatMessages')).filter((message) => message.groupChatId === chat.id);
   const participants = context.users
     .filter((user) => (chat.participantIds || []).includes(user.id))

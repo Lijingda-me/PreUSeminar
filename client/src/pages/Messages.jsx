@@ -1,5 +1,5 @@
 import React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Bookmark, Check, CheckCheck, Copy, CornerUpLeft, Edit3, Flag, Forward, Pin, Send, Shield, Smile, Trash2, UsersRound, X, ChevronLeft, Crown, Info, Plus } from 'lucide-react';
 import AppShell from '../components/AppShell';
@@ -37,52 +37,72 @@ export default function Messages() {
   const [hiddenMessageIds, setHiddenMessageIds] = useState([]);
   const longPressRef = useRef(null);
   const messageRefs = useRef({});
+  const messagesEndRef = useRef(null);
 
   async function loadInbox() {
-    const [matchRes, groupRes, connectedRes] = await Promise.all([
-      api.get('/matching/matches'),
-      api.get('/messages/group-chats'),
-      api.get('/messages/connected/people')
-    ]);
-    setMatches(matchRes.data.matches);
-    setGroupChats(groupRes.data.chats);
-    setConnected(connectedRes.data.people);
+    try {
+      const [matchRes, groupRes, connectedRes] = await Promise.all([
+        api.get('/matching/matches'),
+        api.get('/messages/group-chats'),
+        api.get('/messages/connected/people')
+      ]);
+      setMatches(matchRes.data.matches || []);
+      setGroupChats(groupRes.data.chats || []);
+      setConnected(connectedRes.data.people || []);
+    } catch {
+      setMatches([]);
+      setGroupChats([]);
+      setConnected([]);
+    }
   }
 
   useEffect(() => { loadInbox(); }, []);
+
+  const refreshActiveChat = useCallback(async () => {
+    if (matchId) {
+      const { data } = await api.get(`/messages/${matchId}`);
+      setMessages(data.messages || []);
+      setParticipants(data.participants || []);
+      setActiveChat({
+        type: 'match',
+        title: data.other?.name || 'Mentorship chat',
+        about: `${data.match?.score || 0}% compatibility`
+      });
+      return;
+    }
+    if (groupChatId) {
+      const { data } = await api.get(`/messages/group-chats/${groupChatId}`);
+      setMessages(data.messages || []);
+      setParticipants(data.participants || []);
+      const about = data.chat?.about || 'A private group chat for connected BridgeUp members.';
+      setActiveChat({
+        type: 'group',
+        title: data.chat?.name || 'BridgeUp group chat',
+        about,
+        ownerId: data.chat?.ownerId,
+        moderators: data.chat?.moderators || []
+      });
+      setAboutDraft(about);
+    }
+  }, [matchId, groupChatId, refreshActiveChat, showToast]);
 
   useEffect(() => {
     setShowGroupInfo(false);
     setShowEmojiPicker(false);
     setActiveMessage(null);
     setReplyTarget(null);
-    if (matchId) {
-      api.get(`/messages/${matchId}`).then(({ data }) => {
-        setMessages(data.messages);
-        setParticipants(data.participants || []);
-        setActiveChat({
-          type: 'match',
-          title: data.other?.name || 'Mentorship chat',
-          about: `${data.match?.score || 0}% compatibility`
-        });
-      });
-    }
-    if (groupChatId) {
-      api.get(`/messages/group-chats/${groupChatId}`).then(({ data }) => {
-        setMessages(data.messages);
-        setParticipants(data.participants || []);
-        const about = data.chat?.about || 'A private group chat for connected BridgeUp members.';
-        setActiveChat({
-          type: 'group',
-          title: data.chat?.name || 'BridgeUp group chat',
-          about,
-          ownerId: data.chat?.ownerId,
-          moderators: data.chat?.moderators || []
-        });
-        setAboutDraft(about);
-      });
-    }
+    if (!matchId && !groupChatId) return;
+
+    refreshActiveChat().catch(() => showToast('Messages could not load right now.', 'error'));
+    const id = setInterval(() => {
+      refreshActiveChat().catch(() => {});
+    }, 2500);
+    return () => clearInterval(id);
   }, [matchId, groupChatId]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [messages.length]);
 
   async function refreshGroupChat() {
     if (!groupChatId) return;
@@ -419,7 +439,7 @@ export default function Messages() {
                 <p className="mt-2 text-sm font-semibold leading-6">{activeChat?.about}</p>
               )}
             </div>
-            <div className="mt-4 min-h-0 flex-1 overflow-y-auto">
+            <div className="sleek-scrollbar mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
               <button onClick={leaveGroup} className="mb-4 h-12 w-full rounded-full border border-brand-coral/30 bg-brand-coral/10 text-sm font-black text-brand-coral">
                 Leave group chat
               </button>
@@ -472,7 +492,7 @@ export default function Messages() {
       )}
 
       <div className="mt-4 flex min-h-[72vh] flex-col pb-28">
-        <div className="flex-1 space-y-3 overflow-y-auto pb-4">
+        <div className="sleek-scrollbar max-h-[calc(100vh-210px)] flex-1 space-y-3 overflow-y-auto pb-4 pr-1">
           {messages.filter((message) => !hiddenMessageIds.includes(message.id)).map((message) => {
             const mine = message.senderId === user.id;
             const replied = message.replyToId ? messageById(message.replyToId) : null;
@@ -506,6 +526,7 @@ export default function Messages() {
               </button>
             );
           })}
+          <div ref={messagesEndRef} />
         </div>
       </div>
       {activeMessage && (
@@ -622,7 +643,7 @@ function ForwardSheet({ matches, groupChats, selection, setSelection, onClose, o
           <h2 className="text-xl font-black">Forward to</h2>
           <button type="button" onClick={onClose} className="grid h-10 w-10 place-items-center rounded-full bg-brand-cream text-brand-muted"><X /></button>
         </div>
-        <div className="max-h-[50vh] space-y-2 overflow-y-auto">
+        <div className="sleek-scrollbar max-h-[50vh] space-y-2 overflow-y-auto pr-1">
           {matches.map((match) => (
             <button type="button" key={match.id} onClick={() => toggle(`match:${match.id}`)} className="flex w-full items-center justify-between rounded-2xl bg-brand-cream p-3 text-left">
               <span className="font-bold">{match.other?.name}</span>

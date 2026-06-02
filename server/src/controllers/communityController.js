@@ -138,15 +138,19 @@ export async function deleteGroupMessage(req, res) {
 }
 
 export async function workshops(_req, res) {
-  res.json({ workshops: await list('workshops'), events: await list('events') });
+  const [workshopsList, eventsList, users] = await Promise.all([list('workshops'), list('events'), list('users')]);
+  res.json({
+    workshops: workshopsList,
+    events: eventsList.map((event) => decorateEvent(event, users, _req.user?.id))
+  });
 }
 
 export async function schedule(_req, res) {
-  const [workshopsList, eventsList] = await Promise.all([list('workshops'), list('events')]);
+  const [workshopsList, eventsList, users] = await Promise.all([list('workshops'), list('events'), list('users')]);
   res.json({
     schedule: [
       ...workshopsList.map((item) => ({ ...item, type: 'workshop' })),
-      ...eventsList.map((item) => ({ ...item, type: 'event' }))
+      ...eventsList.map((item) => ({ ...decorateEvent(item, users, _req.user?.id), type: 'event' }))
     ].sort((a, b) => String(a.date).localeCompare(String(b.date)))
   });
 }
@@ -157,8 +161,18 @@ export async function createWorkshop(req, res) {
 }
 
 export async function createEvent(req, res) {
-  const event = await insert('events', { ...req.body, createdBy: req.user.id, attendees: [] });
-  res.status(201).json({ event });
+  const event = await insert('events', {
+    title: req.body.title,
+    description: req.body.description,
+    date: req.body.date,
+    time: req.body.time || '',
+    location: req.body.location,
+    capacity: Number(req.body.capacity || 0),
+    organizer: req.body.organizer || req.user.name,
+    createdBy: req.user.id,
+    attendees: []
+  });
+  res.status(201).json({ event: decorateEvent(event, [req.user], req.user.id) });
 }
 
 export async function deleteWorkshop(req, res) {
@@ -180,4 +194,31 @@ export async function attendWorkshop(req, res) {
   if (!workshop) return res.status(404).json({ message: 'Workshop not found.' });
   const attendees = Array.from(new Set([...(workshop.attendees || []), req.user.id]));
   res.json({ workshop: await update('workshops', workshop.id, { attendees }) });
+}
+
+function decorateEvent(event, users = [], userId = null) {
+  const organizer = event.organizer || users.find((user) => user.id === event.createdBy)?.name || 'BridgeUp Staff';
+  const attendees = event.attendees || [];
+  return {
+    ...event,
+    organizer,
+    participantCount: attendees.length,
+    joined: userId ? attendees.includes(userId) : false
+  };
+}
+
+export async function joinEvent(req, res) {
+  const event = await findOne('events', (item) => item.id === req.params.id);
+  if (!event) return res.status(404).json({ message: 'Event not found.' });
+  const attendees = Array.from(new Set([...(event.attendees || []), req.user.id]));
+  const updated = await update('events', event.id, { attendees });
+  res.json({ event: decorateEvent(updated, [req.user], req.user.id) });
+}
+
+export async function leaveEvent(req, res) {
+  const event = await findOne('events', (item) => item.id === req.params.id);
+  if (!event) return res.status(404).json({ message: 'Event not found.' });
+  const attendees = (event.attendees || []).filter((id) => id !== req.user.id);
+  const updated = await update('events', event.id, { attendees });
+  res.json({ event: decorateEvent(updated, [req.user], req.user.id) });
 }

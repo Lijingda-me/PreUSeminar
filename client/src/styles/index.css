@@ -63,6 +63,51 @@ button, input, select, textarea {
   display: none;
 }
 
+.sleek-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #2f6bff rgba(47, 107, 255, 0.12);
+  scrollbar-gutter: stable;
+}
+
+.sleek-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.sleek-scrollbar::-webkit-scrollbar-track {
+  background: rgba(47, 107, 255, 0.1);
+  border-radius: 999px;
+}
+
+.sleek-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #4f8cff, #1f5eff);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+}
+
+.sleek-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #2f6bff, #174de0);
+}
+
+.sleek-scrollbar-x {
+  scrollbar-width: thin;
+  scrollbar-color: #2f6bff rgba(47, 107, 255, 0.1);
+}
+
+.sleek-scrollbar-x::-webkit-scrollbar {
+  height: 6px;
+}
+
+.sleek-scrollbar-x::-webkit-scrollbar-track {
+  background: rgba(47, 107, 255, 0.08);
+  border-radius: 999px;
+}
+
+.sleek-scrollbar-x::-webkit-scrollbar-thumb {
+  background: #2f6bff;
+  border-radius: 999px;
+}
+
 @keyframes menuIn {
   from {
     opacity: 0;

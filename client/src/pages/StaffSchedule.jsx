@@ -11,18 +11,30 @@ const emptyForm = {
   title: '',
   description: '',
   date: '',
+  time: '',
   location: '',
+  organizer: '',
   capacity: 20
 };
 
 export default function StaffSchedule() {
   const [schedule, setSchedule] = useState([]);
   const [form, setForm] = useState(emptyForm);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const showToast = useToastStore((state) => state.showToast);
 
   async function load() {
-    const { data } = await api.get('/community/schedule');
-    setSchedule(data.schedule);
+    try {
+      setLoadError('');
+      const { data } = await api.get('/community/schedule');
+      setSchedule(data.schedule || []);
+    } catch {
+      setSchedule([]);
+      setLoadError('Schedule could not load right now.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { load(); }, []);
@@ -33,19 +45,29 @@ export default function StaffSchedule() {
       title: form.title,
       description: form.description,
       date: form.date,
+      time: form.time,
       location: form.location,
+      organizer: form.organizer,
       capacity: Number(form.capacity)
     };
-    await api.post(form.type === 'workshop' ? '/community/workshops' : '/community/events', payload);
-    setForm(emptyForm);
-    showToast('Schedule item created');
-    await load();
+    try {
+      await api.post(form.type === 'workshop' ? '/community/workshops' : '/community/events', payload);
+      setForm(emptyForm);
+      showToast('Schedule item created');
+      await load();
+    } catch {
+      showToast('Schedule item could not be created.', 'error');
+    }
   }
 
   async function deleteItem(item) {
-    await api.delete(item.type === 'workshop' ? `/community/workshops/${item.id}` : `/community/events/${item.id}`);
-    showToast('Schedule item removed');
-    await load();
+    try {
+      await api.delete(item.type === 'workshop' ? `/community/workshops/${item.id}` : `/community/events/${item.id}`);
+      showToast('Schedule item removed');
+      await load();
+    } catch {
+      showToast('Schedule item could not be removed.', 'error');
+    }
   }
 
   return (
@@ -73,7 +95,11 @@ export default function StaffSchedule() {
           <Field label="Description" value={form.description} onChange={(description) => setForm({ ...form, description })} />
           <div className="grid grid-cols-2 gap-3">
             <Field label="Date" type="date" value={form.date} onChange={(date) => setForm({ ...form, date })} />
+            <Field label="Time" type="time" value={form.time} onChange={(time) => setForm({ ...form, time })} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
             <Field label="Capacity" type="number" value={form.capacity} onChange={(capacity) => setForm({ ...form, capacity })} />
+            <Field label="Organizer" value={form.organizer} onChange={(organizer) => setForm({ ...form, organizer })} required={false} />
           </div>
           <Field label="Location" value={form.location} onChange={(location) => setForm({ ...form, location })} />
           <Button className="w-full">Create</Button>
@@ -82,7 +108,15 @@ export default function StaffSchedule() {
 
       <section className="mt-5 space-y-3">
         <h2 className="text-xl font-black">Current schedule</h2>
-        {schedule.map((item) => (
+        {loading && <div className="rounded-[28px] bg-white/80 p-6 text-center font-semibold text-brand-muted shadow">Loading schedule...</div>}
+        {loadError && !loading && (
+          <div className="rounded-[28px] bg-white/80 p-6 text-center shadow">
+            <h3 className="text-xl font-black">Schedule unavailable</h3>
+            <p className="mt-2 text-sm font-semibold text-brand-muted">{loadError}</p>
+            <button onClick={() => { setLoading(true); load(); }} className="mt-4 h-11 rounded-full bg-brand-blue px-5 text-sm font-black text-white">Try again</button>
+          </div>
+        )}
+        {!loadError && schedule.map((item) => (
           <article key={`${item.type}-${item.id}`} className="rounded-[28px] bg-white/80 p-4 shadow">
             <div className="flex items-start gap-3">
               <div className={`rounded-2xl px-3 py-2 text-xs font-black capitalize ${item.type === 'workshop' ? 'bg-brand-green text-white' : 'bg-brand-blue text-white'}`}>
@@ -90,7 +124,8 @@ export default function StaffSchedule() {
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="text-lg font-black">{item.title}</h3>
-                <p className="text-sm font-semibold text-brand-muted">{item.date} · {item.location}</p>
+                <p className="text-sm font-semibold text-brand-muted">{item.date} {item.time ? `at ${item.time}` : ''} - {item.location}</p>
+                <p className="text-xs font-bold text-brand-muted">Organizer: {item.organizer || 'BridgeUp Staff'} - {item.participantCount || item.attendees?.length || 0} participants</p>
                 <p className="mt-2 text-sm text-brand-muted">{item.description}</p>
               </div>
               <button aria-label={`Remove ${item.title}`} onClick={() => deleteItem(item)} className="touch rounded-2xl bg-brand-coral px-3 text-white shadow">
@@ -99,17 +134,17 @@ export default function StaffSchedule() {
             </div>
           </article>
         ))}
-        {!schedule.length && <div className="rounded-[28px] bg-white/80 p-6 text-center font-semibold text-brand-muted shadow">No schedule items yet.</div>}
+        {!loading && !loadError && !schedule.length && <div className="rounded-[28px] bg-white/80 p-6 text-center font-semibold text-brand-muted shadow">No schedule items yet.</div>}
       </section>
     </AppShell>
   );
 }
 
-function Field({ label, value, onChange, type = 'text' }) {
+function Field({ label, value, onChange, type = 'text', required = true }) {
   return (
     <label className="block">
       <span className="text-sm font-bold text-brand-muted">{label}</span>
-      <input className="touch mt-2 w-full rounded-2xl border-0 bg-brand-cream px-4 outline-brand-blue" type={type} value={value} onChange={(event) => onChange(event.target.value)} required />
+      <input className="touch mt-2 w-full rounded-2xl border-0 bg-brand-cream px-4 outline-brand-blue" type={type} value={value} onChange={(event) => onChange(event.target.value)} required={required} />
     </label>
   );
 }

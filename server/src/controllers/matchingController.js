@@ -17,10 +17,16 @@ export async function candidates(req, res) {
   const users = await list('users');
   const swipes = await list('matchRequests');
   const blocked = new Set(req.user.blockedUsers || []);
-  const alreadyActed = new Set(swipes.filter((item) => item.fromUserId === req.user.id && ['connect', 'skip'].includes(item.action)).map((item) => item.toUserId));
+  const activeMatches = await list('matches');
+  const connectedIds = new Set(activeMatches
+    .filter((match) => match.status === 'matched' && [match.learnerId, match.mentorId].includes(req.user.id))
+    .map((match) => match.learnerId === req.user.id ? match.mentorId : match.learnerId));
+  const alreadyActed = new Set(swipes
+    .filter((item) => item.fromUserId === req.user.id && ['connect', 'skip'].includes(item.action) && item.status !== 'declined')
+    .map((item) => item.toUserId));
 
   const candidates = targetProfiles
-    .filter((profile) => !blocked.has(profile.userId) && !alreadyActed.has(profile.userId))
+    .filter((profile) => !blocked.has(profile.userId) && !alreadyActed.has(profile.userId) && !connectedIds.has(profile.userId))
     .map((profile) => {
       const user = users.find((item) => item.id === profile.userId);
       const pair = req.user.role === 'learner'
@@ -44,25 +50,117 @@ export async function swipe(req, res) {
     return res.status(400).json({ message: 'BridgeUp only matches learners with mentors.' });
   }
 
-  const request = await insert('matchRequests', { fromUserId: req.user.id, toUserId: targetUserId, action, status: action === 'connect' ? 'pending' : 'accepted' });
+  const existingPending = await findOne('matchRequests', (item) =>
+    item.fromUserId === req.user.id
+    && item.toUserId === targetUserId
+    && item.action === 'connect'
+    && item.status === 'pending'
+  );
+  if (action === 'connect' && existingPending) return res.json({ request: existingPending, match: null });
+
+  const request = await insert('matchRequests', {
+    fromUserId: req.user.id,
+    toUserId: targetUserId,
+    action,
+    status: action === 'connect' ? 'pending' : 'accepted',
+    viewedAt: null,
+    resolvedAt: action === 'connect' ? null : new Date().toISOString()
+  });
   if (action === 'save') return res.json({ request, match: null });
   if (action === 'skip') return res.json({ request, match: null });
 
-  const reciprocal = await findOne('matchRequests', (item) => item.fromUserId === targetUserId && item.toUserId === req.user.id && item.action === 'connect');
-  let match = null;
-  if (reciprocal || target.role === 'mentor') {
-    const learner = req.user.role === 'learner' ? req.user : target;
-    const mentor = req.user.role === 'mentor' ? req.user : target;
-    const learnerProfile = await findOne('learnerProfiles', (item) => item.userId === learner.id);
-    const mentorProfile = await findOne('mentorProfiles', (item) => item.userId === mentor.id);
-    const compatibility = calculateCompatibility(learnerProfile, mentorProfile);
-    const existingMatch = await findOne('matches', (item) => item.learnerId === learner.id && item.mentorId === mentor.id);
-    match = existingMatch || await insert('matches', { learnerId: learner.id, mentorId: mentor.id, status: 'matched', ...compatibility });
-    if (reciprocal) await update('matchRequests', reciprocal.id, { status: 'accepted' });
-    await update('matchRequests', request.id, { status: 'accepted' });
+  res.json({ request, match: null });
+}
+
+function safeUser(user) {
+  if (!user) return null;
+  const { passwordHash, ...publicUser } = user;
+  return publicUser;
+}
+
+function profileFor(userId, mentorProfiles, learnerProfiles) {
+  return mentorProfiles.find((profile) => profile.userId === userId)
+    || learnerProfiles.find((profile) => profile.userId === userId)
+    || null;
+}
+
+async function createAcceptedMatch(request) {
+  const [fromUser, toUser] = await Promise.all([
+    findOne('users', (item) => item.id === request.fromUserId),
+    findOne('users', (item) => item.id === request.toUserId)
+  ]);
+  if (!fromUser || !toUser) return null;
+  const learner = fromUser.role === 'learner' ? fromUser : toUser;
+  const mentor = fromUser.role === 'mentor' ? fromUser : toUser;
+  const [learnerProfile, mentorProfile] = await Promise.all([
+    findOne('learnerProfiles', (item) => item.userId === learner.id),
+    findOne('mentorProfiles', (item) => item.userId === mentor.id)
+  ]);
+  const compatibility = calculateCompatibility(learnerProfile, mentorProfile);
+  const existingMatch = await findOne('matches', (item) => item.learnerId === learner.id && item.mentorId === mentor.id);
+  return existingMatch || insert('matches', { learnerId: learner.id, mentorId: mentor.id, status: 'matched', ...compatibility });
+}
+
+export async function inbox(req, res) {
+  const [requests, users, mentorProfiles, learnerProfiles, messages, groupMessages, groupChats] = await Promise.all([
+    list('matchRequests'),
+    list('users'),
+    list('mentorProfiles'),
+    list('learnerProfiles'),
+    list('messages'),
+    list('groupChatMessages'),
+    list('groupChats')
+  ]);
+
+  const incoming = requests
+    .filter((request) => request.toUserId === req.user.id && request.action === 'connect' && request.status === 'pending')
+    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+
+  if (req.query.markViewed === 'true') {
+    await Promise.all(incoming.filter((request) => !request.viewedAt).map((request) => update('matchRequests', request.id, { viewedAt: new Date().toISOString() })));
   }
 
-  res.json({ request, match });
+  const unreadDirectMessages = messages.filter((message) => message.receiverId === req.user.id && !message.readAt).length;
+  const userGroupIds = new Set(groupChats.filter((chat) => (chat.participantIds || []).includes(req.user.id)).map((chat) => chat.id));
+  const unreadGroupMessages = groupMessages.filter((message) => userGroupIds.has(message.groupChatId) && message.senderId !== req.user.id && !(message.readBy || []).includes(req.user.id)).length;
+  const unreadRequests = incoming.filter((request) => !request.viewedAt).length;
+
+  res.json({
+    unreadCount: unreadRequests + unreadDirectMessages + unreadGroupMessages,
+    unreadRequests,
+    unreadMessages: unreadDirectMessages + unreadGroupMessages,
+    requests: incoming.map((request) => {
+      const sender = users.find((user) => user.id === request.fromUserId);
+      const profile = profileFor(request.fromUserId, mentorProfiles, learnerProfiles);
+      return {
+        ...request,
+        sender: safeUser(sender),
+        senderProfile: profile,
+        senderSummary: profile?.bio || profile?.profession || 'BridgeUp member'
+      };
+    })
+  });
+}
+
+export async function acceptRequest(req, res) {
+  const request = await findOne('matchRequests', (item) => item.id === req.params.requestId && item.toUserId === req.user.id && item.action === 'connect');
+  if (!request) return res.status(404).json({ message: 'Request not found.' });
+  if (request.status !== 'pending') return res.status(400).json({ message: 'This request has already been resolved.' });
+  const match = await createAcceptedMatch(request);
+  const now = new Date().toISOString();
+  const updated = await update('matchRequests', request.id, { status: 'accepted', viewedAt: request.viewedAt || now, resolvedAt: now });
+  const reciprocal = await findOne('matchRequests', (item) => item.fromUserId === req.user.id && item.toUserId === request.fromUserId && item.action === 'connect' && item.status === 'pending');
+  if (reciprocal) await update('matchRequests', reciprocal.id, { status: 'accepted', viewedAt: reciprocal.viewedAt || now, resolvedAt: now });
+  res.json({ request: updated, match });
+}
+
+export async function declineRequest(req, res) {
+  const request = await findOne('matchRequests', (item) => item.id === req.params.requestId && item.toUserId === req.user.id && item.action === 'connect');
+  if (!request) return res.status(404).json({ message: 'Request not found.' });
+  if (request.status !== 'pending') return res.status(400).json({ message: 'This request has already been resolved.' });
+  const now = new Date().toISOString();
+  const updated = await update('matchRequests', request.id, { status: 'declined', viewedAt: request.viewedAt || now, resolvedAt: now });
+  res.json({ request: updated });
 }
 
 export async function matches(req, res) {

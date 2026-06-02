@@ -44,7 +44,9 @@ export const MatchRequestSchema = new mongoose.Schema({
   fromUserId: String,
   toUserId: String,
   action: { type: String, enum: ['connect', 'skip', 'save'], required: true },
-  status: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' }
+  status: { type: String, enum: ['pending', 'accepted', 'declined', 'rejected'], default: 'pending' },
+  viewedAt: Date,
+  resolvedAt: Date
 }, { timestamps: true });
 
 export const MessageSchema = new mongoose.Schema({
@@ -98,10 +100,14 @@ export const WorkshopSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 export const EventSchema = new mongoose.Schema({
+  createdBy: String,
   title: String,
   description: String,
   date: String,
+  time: String,
   location: String,
+  organizer: String,
+  capacity: Number,
   attendees: [String]
 }, { timestamps: true });
 

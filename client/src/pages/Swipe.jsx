@@ -1,6 +1,7 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Bell } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import Button from '../components/Button';
 import ProfileCard from '../components/ProfileCard';
@@ -10,18 +11,43 @@ import { useToastStore } from '../store/toastStore';
 export default function Swipe() {
   const [candidates, setCandidates] = useState([]);
   const [match, setMatch] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const showToast = useToastStore((state) => state.showToast);
 
   async function load() {
-    const { data } = await api.get('/matching/candidates');
-    const strong = data.candidates.filter((item) => item.compatibility.score >= 60);
-    setCandidates(strong.length ? strong : data.candidates);
+    try {
+      setLoadError('');
+      const [candidateRes, inboxRes] = await Promise.allSettled([
+        api.get('/matching/candidates'),
+        api.get('/matching/inbox')
+      ]);
+      if (candidateRes.status === 'fulfilled') {
+        const nextCandidates = candidateRes.value.data.candidates || [];
+        const strong = nextCandidates.filter((item) => item.compatibility.score >= 60);
+        setCandidates(strong.length ? strong : nextCandidates);
+      } else {
+        setCandidates([]);
+        setLoadError('Swipe cards could not load right now.');
+      }
+      if (inboxRes.status === 'fulfilled') setUnreadCount(inboxRes.value.data.unreadCount || 0);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    const id = setInterval(() => {
+      api.get('/matching/inbox').then(({ data }) => setUnreadCount(data.unreadCount || 0)).catch(() => {});
+    }, 8000);
+    return () => clearInterval(id);
+  }, []);
 
   async function swipe(action) {
     const current = candidates[0];
+    if (!current) return;
     const { data } = await api.post('/matching/swipe', { targetUserId: current.user.id, action });
     setCandidates((items) => items.slice(1));
     if (data.match) setMatch({ ...data.match, other: current.user });
@@ -30,12 +56,14 @@ export default function Swipe() {
 
   async function save() {
     const current = candidates[0];
+    if (!current) return;
     await api.post(`/profiles/save/${current.user.id}`);
     showToast('Saved to your profile');
   }
 
   async function report() {
     const current = candidates[0];
+    if (!current) return;
     await api.post('/safety/reports', { reportedUserId: current.user.id, reason: 'Safety concern', details: 'Reported from swipe card.' });
     showToast('Report sent for moderation');
   }
@@ -47,7 +75,14 @@ export default function Swipe() {
           <p className="font-bold text-brand-muted">BridgeUp</p>
           <h1 className="text-3xl font-black">Swipe to connect</h1>
         </div>
-        <div className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-yellow"><Sparkles /></div>
+        <Link to="/inbox" className="relative grid h-12 w-12 place-items-center rounded-2xl bg-brand-blue text-white shadow-soft" aria-label="Inbox">
+          <Bell />
+          {unreadCount > 0 && (
+            <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-brand-coral px-1 text-[11px] font-black text-white">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </Link>
       </header>
       {match && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-brand-text/60 p-5 backdrop-blur">
@@ -59,7 +94,18 @@ export default function Swipe() {
           </div>
         </div>
       )}
-      {candidates[0] ? (
+      {loading ? (
+        <div className="rounded-[32px] bg-white/80 p-8 text-center shadow-soft">
+          <h2 className="text-2xl font-black">Loading cards</h2>
+          <p className="mt-2 text-brand-muted">Getting your latest recommendations.</p>
+        </div>
+      ) : loadError ? (
+        <div className="rounded-[32px] bg-white/80 p-8 text-center shadow-soft">
+          <h2 className="text-2xl font-black">Could not load cards</h2>
+          <p className="mt-2 text-brand-muted">{loadError}</p>
+          <Button className="mt-5" onClick={() => { setLoading(true); load(); }}>Try again</Button>
+        </div>
+      ) : candidates[0] ? (
         <div className="relative">
           {candidates[1] && <div className="absolute inset-x-6 top-4 h-[calc(100vh-210px)] rounded-[34px] bg-white/70 shadow-soft" />}
           <ProfileCard candidate={candidates[0]} onSwipe={swipe} onSave={save} onReport={report} />

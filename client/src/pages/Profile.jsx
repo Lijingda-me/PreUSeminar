@@ -1,6 +1,6 @@
 import React from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import { Award, Bell, Camera, CheckCircle2, Eye, ImagePlus, Info, Languages, Lock, LogOut, MoreHorizontal, Palette, Share2, ShieldAlert, Sparkles, Trash2, UserRound, X } from 'lucide-react';
+import { Award, Bell, Camera, CheckCircle2, Copy, Eye, ImagePlus, Info, Languages, Lock, LogOut, MoreHorizontal, Palette, Share2, ShieldAlert, Sparkles, Trash2, UserRound, X } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import Button from '../components/Button';
 import Avatar from '../components/Avatar';
@@ -22,6 +22,7 @@ export default function Profile() {
   const [fullscreenImage, setFullscreenImage] = useState(null);
   const [showMore, setShowMore] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showShareSheet, setShowShareSheet] = useState(false);
 
   useEffect(() => {
     Promise.all([api.get('/profiles/me'), api.get('/safety/settings')]).then(([profileRes, settingsRes]) => {
@@ -74,6 +75,33 @@ export default function Profile() {
     setShowLogoutConfirm(false);
   }
 
+  const shareUrl = typeof window === 'undefined' ? '' : `${window.location.origin}/profiles/${user.id}`;
+
+  async function copyShareLink() {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const input = document.createElement('textarea');
+        input.value = shareUrl;
+        input.setAttribute('readonly', '');
+        input.style.position = 'fixed';
+        input.style.opacity = '0';
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+      }
+      showToast('Profile link copied');
+    } catch {
+      showToast('Could not copy link. Select it manually.', 'error');
+    }
+  }
+
+  function openShareSheet() {
+    setShowShareSheet(true);
+  }
+
   if (!profile && !['admin', 'staff'].includes(user.role)) {
     return <AppShell><div className="ios-card p-6">Loading profile...</div></AppShell>;
   }
@@ -90,7 +118,7 @@ export default function Profile() {
         <div className="relative h-40 bg-[url('https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center">
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
           <div className="absolute right-4 top-4 flex gap-2">
-            <button onClick={() => showToast('Profile link copied', 'info')} className="grid h-11 w-11 place-items-center rounded-full bg-white/90 text-brand-blue shadow-soft" aria-label="Share profile"><Share2 /></button>
+            <button onClick={openShareSheet} className="grid h-11 w-11 place-items-center rounded-full bg-white/90 text-brand-blue shadow-soft" aria-label="Share profile"><Share2 /></button>
             <button onClick={() => setShowMore((value) => !value)} className="grid h-11 w-11 place-items-center rounded-full bg-white/90 text-brand-blue shadow-soft" aria-label="More profile actions"><MoreHorizontal /></button>
           </div>
 
@@ -131,7 +159,7 @@ export default function Profile() {
 
           <div className="mt-4 grid grid-cols-[1fr_92px_64px] gap-2">
             <button onClick={() => setMode('edit')} className="h-12 rounded-full bg-brand-blue text-sm font-black text-white">Edit Profile</button>
-            <button onClick={() => showToast('Profile link copied', 'info')} className="h-12 rounded-full bg-brand-cream text-sm font-black text-brand-blue">Share</button>
+            <button onClick={openShareSheet} className="h-12 rounded-full bg-brand-cream text-sm font-black text-brand-blue">Share</button>
             <button onClick={() => setShowMore((value) => !value)} className="grid h-12 place-items-center rounded-full bg-brand-cream text-brand-blue"><MoreHorizontal /></button>
           </div>
 
@@ -167,6 +195,29 @@ export default function Profile() {
       {fullscreenImage && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-5" onClick={() => setFullscreenImage(null)}>
           <img src={fullscreenImage} alt="" className="max-h-full rounded-[28px] object-contain" />
+        </div>
+      )}
+
+      {showShareSheet && (
+        <div className="fixed inset-0 z-50 grid place-items-end bg-black/40 p-5 backdrop-blur-sm" onClick={() => setShowShareSheet(false)}>
+          <section className="w-full rounded-[30px] bg-white p-5 shadow-soft" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase text-brand-blue">Share profile</p>
+                <h2 className="mt-1 text-2xl font-black">Copy your link</h2>
+              </div>
+              <button onClick={() => setShowShareSheet(false)} className="grid h-10 w-10 place-items-center rounded-full bg-brand-cream text-brand-muted" aria-label="Close share link">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="mt-4 flex gap-2 rounded-[22px] bg-brand-cream p-2">
+              <input className="min-w-0 flex-1 bg-transparent px-2 text-sm font-semibold outline-none" value={shareUrl} readOnly onFocus={(event) => event.target.select()} />
+              <button onClick={copyShareLink} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-blue text-white" aria-label="Copy profile link">
+                <Copy size={18} />
+              </button>
+            </div>
+            <button onClick={copyShareLink} className="mt-4 h-12 w-full rounded-full bg-brand-blue text-sm font-black text-white">Copy Link</button>
+          </section>
         </div>
       )}
 

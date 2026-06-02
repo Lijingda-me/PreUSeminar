@@ -1,7 +1,7 @@
 import React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bookmark, CheckCircle2, Filter, Plus, Search, SlidersHorizontal, Star } from 'lucide-react';
+import { Bookmark, CalendarDays, CheckCircle2, Clock, Filter, Loader2, MapPin, Plus, Search, SlidersHorizontal, Star, UsersRound } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import Avatar from '../components/Avatar';
 import { api } from '../api/client';
@@ -22,6 +22,10 @@ export default function SearchPage() {
   const [results, setResults] = useState([]);
   const [groups, setGroups] = useState([]);
   const [workshops, setWorkshops] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [eventLoadingId, setEventLoadingId] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [showGroupForm, setShowGroupForm] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
@@ -44,22 +48,34 @@ export default function SearchPage() {
       'Most Active': 'relevant',
       'Most Recommended': 'match'
     };
-    const [searchRes, groupsRes, workshopsRes] = await Promise.all([
-      api.get('/matching/search', { params: { q: searchTerm, industry: advanced.industry, minimumCompatibility: advanced.minimumCompatibility, sort: sortMap[sort] } }),
-      api.get('/community/groups'),
-      api.get('/community/workshops')
-    ]);
-    setResults(searchRes.data.results);
-    setGroups(groupsRes.data.groups);
-    setWorkshops(workshopsRes.data.workshops || []);
-    if (searchTerm.trim()) {
-      const next = [searchTerm.trim(), ...recent.filter((item) => item !== searchTerm.trim())].slice(0, 5);
-      setRecent(next);
-      localStorage.setItem('bridgeup_recent_searches', JSON.stringify(next));
+    try {
+      setLoadError('');
+      const [searchRes, groupsRes, workshopsRes] = await Promise.all([
+        api.get('/matching/search', { params: { q: searchTerm, industry: advanced.industry, minimumCompatibility: advanced.minimumCompatibility, sort: sortMap[sort] } }),
+        api.get('/community/groups'),
+        api.get('/community/workshops')
+      ]);
+      setResults(searchRes.data.results || []);
+      setGroups(groupsRes.data.groups || []);
+      setWorkshops(workshopsRes.data.workshops || []);
+      setEvents(workshopsRes.data.events || []);
+      if (searchTerm.trim()) {
+        const next = [searchTerm.trim(), ...recent.filter((item) => item !== searchTerm.trim())].slice(0, 5);
+        setRecent(next);
+        localStorage.setItem('bridgeup_recent_searches', JSON.stringify(next));
+      }
+    } catch {
+      setLoadError('Search results could not load right now.');
+    } finally {
+      setLoading(false);
     }
   }
 
-  useEffect(() => { load(''); }, []);
+  useEffect(() => {
+    load('');
+    const id = setInterval(() => load(q), 10000);
+    return () => clearInterval(id);
+  }, []);
   useEffect(() => {
     const id = setTimeout(() => load(q), 220);
     return () => clearTimeout(id);
@@ -67,24 +83,50 @@ export default function SearchPage() {
 
   async function createGroup(event) {
     event.preventDefault();
-    await api.post('/community/groups', groupForm);
-    setGroupForm({ name: '', topic: '', description: '' });
-    setShowGroupForm(false);
-    await load(q);
-    showToast('Group created');
+    try {
+      await api.post('/community/groups', groupForm);
+      setGroupForm({ name: '', topic: '', description: '' });
+      setShowGroupForm(false);
+      await load(q);
+      showToast('Group created');
+    } catch {
+      showToast('Group could not be created.', 'error');
+    }
   }
 
   async function connect(candidate) {
-    await api.post('/matching/swipe', { targetUserId: candidate.user.id, action: 'connect' });
-    showToast('Request sent');
+    try {
+      await api.post('/matching/swipe', { targetUserId: candidate.user.id, action: 'connect' });
+      showToast('Request sent');
+    } catch {
+      showToast('Request could not be sent.', 'error');
+    }
   }
 
   async function save(candidate) {
-    await api.post(`/profiles/save/${candidate.user.id}`);
-    const next = Array.from(new Set([...savedIds, candidate.user.id]));
-    setSavedIds(next);
-    localStorage.setItem('bridgeup_saved_search_ids', JSON.stringify(next));
-    showToast('Saved mentor');
+    try {
+      await api.post(`/profiles/save/${candidate.user.id}`);
+      const next = Array.from(new Set([...savedIds, candidate.user.id]));
+      setSavedIds(next);
+      localStorage.setItem('bridgeup_saved_search_ids', JSON.stringify(next));
+      showToast('Saved mentor');
+    } catch {
+      showToast('Profile could not be saved.', 'error');
+    }
+  }
+
+  async function toggleEvent(eventItem) {
+    setEventLoadingId(eventItem.id);
+    try {
+      const action = eventItem.joined ? 'leave' : 'join';
+      const { data } = await api.post(`/community/events/${eventItem.id}/${action}`);
+      setEvents((items) => items.map((item) => item.id === eventItem.id ? data.event : item));
+      showToast(action === 'join' ? 'Event joined' : 'Event left');
+    } catch {
+      showToast('Event update could not be completed.', 'error');
+    } finally {
+      setEventLoadingId('');
+    }
   }
 
   const visibleResults = activeFilter === 'Saved' ? results.filter((item) => savedIds.includes(item.user.id)) : results;
@@ -99,11 +141,11 @@ export default function SearchPage() {
           <button onClick={() => setShowFilters(true)} className="grid h-12 w-12 place-items-center rounded-full bg-brand-cream text-brand-text" aria-label="Filters"><SlidersHorizontal /></button>
         </div>
         {suggestions.length > 0 && (
-          <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+          <div className="sleek-scrollbar-x mt-2 flex gap-2 overflow-x-auto pb-2">
             {suggestions.map((item) => <button key={item} onClick={() => setQ(item)} className="shrink-0 rounded-full bg-white px-3 py-2 text-xs font-black shadow">{item}</button>)}
           </div>
         )}
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+        <div className="sleek-scrollbar-x mt-3 flex gap-2 overflow-x-auto pb-2">
           {filters.map((item) => <button key={item} onClick={() => setActiveFilter(item)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-black ${activeFilter === item ? 'bg-brand-blue text-white' : 'bg-white text-brand-muted shadow'}`}>{item}</button>)}
         </div>
       </div>
@@ -123,7 +165,16 @@ export default function SearchPage() {
         )}
       </section>
 
-      {(activeFilter === 'All' || activeFilter === 'Mentors' || activeFilter === 'Saved') && (
+      {loading && <div className="mt-5 rounded-[28px] bg-white p-6 text-center font-semibold text-brand-muted shadow-soft">Loading results...</div>}
+      {loadError && !loading && (
+        <div className="mt-5 rounded-[28px] bg-white p-6 text-center shadow-soft">
+          <h2 className="text-xl font-black">Results unavailable</h2>
+          <p className="mt-2 text-sm font-semibold text-brand-muted">{loadError}</p>
+          <button onClick={() => { setLoading(true); load(q); }} className="mt-4 h-11 rounded-full bg-brand-blue px-5 text-sm font-black text-white">Try again</button>
+        </div>
+      )}
+
+      {!loading && !loadError && (activeFilter === 'All' || activeFilter === 'Mentors' || activeFilter === 'Saved') && (
         <section className="mt-6">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-xl font-black">{activeFilter === 'Saved' ? 'Saved mentors' : 'Mentors'}</h2>
@@ -138,7 +189,7 @@ export default function SearchPage() {
         </section>
       )}
 
-      {(activeFilter === 'All' || activeFilter === 'Groups') && (
+      {!loading && !loadError && (activeFilter === 'All' || activeFilter === 'Groups') && (
         <section className="mt-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-black">Community groups</h2>
@@ -156,17 +207,53 @@ export default function SearchPage() {
         </section>
       )}
 
-      {(activeFilter === 'All' || activeFilter === 'Workshops' || activeFilter === 'Events') && (
+      {!loading && !loadError && (activeFilter === 'All' || activeFilter === 'Workshops' || activeFilter === 'Events') && (
         <section className="mt-6">
           <h2 className="text-xl font-black">Workshops & Events</h2>
           <div className="mt-3 grid gap-3">
-            {workshops.map((workshop) => <button key={workshop.id} onClick={() => api.post(`/community/workshops/${workshop.id}/attend`).then(() => showToast('Workshop joined'))} className="rounded-3xl bg-brand-card p-4 text-left shadow"><b>{workshop.title}</b><p className="mt-1 text-sm text-brand-muted">{workshop.date} - {workshop.location}</p></button>)}
+            {workshops.map((workshop) => <button key={workshop.id} onClick={() => api.post(`/community/workshops/${workshop.id}/attend`).then(() => showToast('Workshop joined')).catch(() => showToast('Workshop could not be joined.', 'error'))} className="rounded-3xl bg-brand-card p-4 text-left shadow"><b>{workshop.title}</b><p className="mt-1 text-sm text-brand-muted">{workshop.date} - {workshop.location}</p></button>)}
+            {events.map((eventItem) => (
+              <EventCard
+                key={eventItem.id}
+                eventItem={eventItem}
+                loading={eventLoadingId === eventItem.id}
+                onToggle={() => toggleEvent(eventItem)}
+              />
+            ))}
           </div>
         </section>
       )}
 
       {showFilters && <AdvancedFilters advanced={advanced} setAdvanced={setAdvanced} onClose={() => setShowFilters(false)} />}
     </AppShell>
+  );
+}
+
+function EventCard({ eventItem, loading, onToggle }) {
+  return (
+    <article className="rounded-[24px] bg-white p-4 shadow-soft">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-black uppercase text-brand-blue">Event</p>
+          <h3 className="mt-1 text-lg font-black">{eventItem.title}</h3>
+          <p className="mt-2 line-clamp-2 text-sm leading-5 text-brand-muted">{eventItem.description}</p>
+        </div>
+        <button
+          disabled={loading}
+          onClick={onToggle}
+          className={`h-11 shrink-0 rounded-full px-4 text-sm font-black text-white ${eventItem.joined ? 'bg-brand-coral' : 'bg-brand-blue'}`}
+        >
+          {loading ? <Loader2 className="animate-spin" size={18} /> : eventItem.joined ? 'Leave Event' : 'Join'}
+        </button>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-bold text-brand-muted">
+        <span className="flex items-center gap-1 rounded-2xl bg-brand-cream px-3 py-2"><CalendarDays size={14} /> {eventItem.date}</span>
+        <span className="flex items-center gap-1 rounded-2xl bg-brand-cream px-3 py-2"><Clock size={14} /> {eventItem.time || 'TBA'}</span>
+        <span className="flex items-center gap-1 rounded-2xl bg-brand-cream px-3 py-2"><MapPin size={14} /> {eventItem.location}</span>
+        <span className="flex items-center gap-1 rounded-2xl bg-brand-cream px-3 py-2"><UsersRound size={14} /> {eventItem.participantCount || 0} joined</span>
+      </div>
+      <p className="mt-3 text-sm font-semibold text-brand-muted">Organizer: {eventItem.organizer || 'BridgeUp Staff'}</p>
+    </article>
   );
 }
 

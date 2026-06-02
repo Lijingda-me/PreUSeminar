@@ -6,6 +6,7 @@ import Auth from './pages/Auth';
 import RoleSelection from './pages/RoleSelection';
 import Onboarding from './pages/Onboarding';
 import Swipe from './pages/Swipe';
+import Inbox from './pages/Inbox';
 import SearchPage from './pages/SearchPage';
 import GroupPage from './pages/GroupPage';
 import Matches from './pages/Matches';
@@ -39,6 +40,7 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/swipe" element={<Swipe />} />
+          <Route path="/inbox" element={<Inbox />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/groups/:groupId" element={<GroupPage />} />
           <Route path="/matches" element={<Matches />} />

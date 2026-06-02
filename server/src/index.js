@@ -31,7 +31,22 @@ app.use(helmet({
     }
   }
 }));
-app.use(cors({ origin: env.clientOrigin, credentials: true }));
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://pre-u-seminar.vercel.app'
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('dev'));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 500 }));
@@ -43,11 +58,13 @@ app.use('/api/matching', matchingRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/safety', safetyRoutes);
-// app.use(express.static(clientDist));
-// app.get('*', (req, res, next) => {
-//   if (req.path.startsWith('/api')) return next();
-//   res.sendFile(path.join(clientDist, 'index.html'));
-// });
+app.use(express.static(clientDist));
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  res.sendFile(path.join(clientDist, 'index.html'), (error) => {
+    if (error) next();
+  });
+});
 
 app.get('/', (_req, res) => {
   res.json({ ok: true, name: 'BridgeUp API', status: 'running' });

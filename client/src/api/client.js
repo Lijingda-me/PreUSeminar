@@ -15,6 +15,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const message = error.response?.data?.message || 'Action could not be completed.';
+    if (error.response?.status === 401) {
+      localStorage.removeItem('bridgeup_token');
+      localStorage.removeItem('bridgeup_user');
+      if (!['/login', '/signup', '/landing', '/'].includes(window.location.pathname)) {
+        window.location.replace('/login');
+      }
+    }
     useToastStore.getState().showToast(message, 'error');
     return Promise.reject(error);
   }

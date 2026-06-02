@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { attendWorkshop, createEvent, createGroup, createGroupMessage, createWorkshop, deleteEvent, deleteGroup, deleteGroupMessage, deleteWorkshop, editGroupMessage, grantModerator, groupDetail, groups, joinGroup, leaveGroup, pinGroupMessage, schedule, workshops } from '../controllers/communityController.js';
+import { attendWorkshop, createEvent, createGroup, createGroupMessage, createWorkshop, deleteEvent, deleteGroup, deleteGroupMessage, deleteWorkshop, editGroupMessage, grantModerator, groupDetail, groups, joinEvent, joinGroup, leaveEvent, leaveGroup, pinGroupMessage, schedule, workshops } from '../controllers/communityController.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 
 export const communityRoutes = Router();
@@ -22,3 +22,5 @@ communityRoutes.post('/events', requireAuth, requireRole('staff', 'admin'), crea
 communityRoutes.delete('/workshops/:id', requireAuth, requireRole('staff', 'admin'), deleteWorkshop);
 communityRoutes.delete('/events/:id', requireAuth, requireRole('staff', 'admin'), deleteEvent);
 communityRoutes.post('/workshops/:id/attend', requireAuth, attendWorkshop);
+communityRoutes.post('/events/:id/join', requireAuth, joinEvent);
+communityRoutes.post('/events/:id/leave', requireAuth, leaveEvent);
