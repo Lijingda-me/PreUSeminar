@@ -146,6 +146,7 @@ export default function Messages() {
         if (current) {
           setActiveCall(current);
           setCallStatus(current.status === 'connected' ? 'Connected' : 'Ringing');
+          if (current.status === 'connected') stopRingTone();
         }
       } catch {
         // Polling should never interrupt the chat.
@@ -169,6 +170,7 @@ export default function Messages() {
         startRingTone();
       }
       if (payload.event === 'call:accept' && payload.call?.id === activeCallRef.current?.id) {
+        stopRingTone();
         setActiveCall(payload.call);
         setCallStatus('Connected');
         callStartedAtRef.current = payload.call.acceptedAt || new Date().toISOString();
@@ -265,8 +267,21 @@ export default function Messages() {
     video.muted = muted;
     video.playsInline = true;
     video.autoplay = true;
+    video.onloadedmetadata = () => video.play().catch(() => {});
+    stream?.addEventListener?.('addtrack', () => {
+      setTimeout(() => video.play().catch(() => {}), 50);
+    });
     video.play().catch(() => {});
     return video;
+  }
+
+  function bindStreamToElement(element, stream, muted = false) {
+    if (!element || !stream) return;
+    if (element.srcObject !== stream) element.srcObject = stream;
+    element.muted = muted;
+    element.playsInline = true;
+    element.onloadedmetadata = () => element.play?.().catch(() => {});
+    element.play?.().catch(() => {});
   }
 
   function buildRecordedStream(call) {
@@ -364,11 +379,19 @@ export default function Messages() {
     const peer = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
     peerRef.current = peer;
     remoteStreamRef.current = new MediaStream();
+    if (call.callType === 'video' && !stream.getVideoTracks().length) {
+      peer.addTransceiver('video', { direction: 'recvonly' });
+    }
     stream.getTracks().forEach((track) => peer.addTrack(track, stream));
     peer.ontrack = (event) => {
-      event.streams[0]?.getTracks().forEach((track) => remoteStreamRef.current.addTrack(track));
-      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = remoteStreamRef.current;
-      if (remoteAudioRef.current) remoteAudioRef.current.srcObject = remoteStreamRef.current;
+      const tracks = event.streams?.[0]?.getTracks?.() || [event.track];
+      tracks.forEach((track) => {
+        if (!remoteStreamRef.current.getTracks().some((existing) => existing.id === track.id)) {
+          remoteStreamRef.current.addTrack(track);
+        }
+      });
+      bindStreamToElement(remoteVideoRef.current, remoteStreamRef.current, true);
+      bindStreamToElement(remoteAudioRef.current, remoteStreamRef.current, !speakerOn);
     };
     peer.onicecandidate = (event) => {
       if (event.candidate) sendSignal(call.id, 'ice-candidate', event.candidate).catch(() => {});
@@ -1112,21 +1135,23 @@ function IncomingCallSheet({ call, participants, onAccept, onDecline }) {
 
 function CallOverlay({ call, status, seconds, micMuted, cameraOff, speakerOn, localVideoRef, remoteVideoRef, remoteAudioRef, localStreamRef, remoteStreamRef, onToggleMic, onToggleCamera, onToggleSpeaker, onSwitchToVideo, onEnd, formatDuration, participants }) {
   useEffect(() => {
+    function attach(element, stream, muted = false) {
+      if (!element || !stream) return;
+      if (element.srcObject !== stream) element.srcObject = stream;
+      element.muted = muted;
+      element.playsInline = true;
+      element.onloadedmetadata = () => element.play?.().catch(() => {});
+      element.play?.().catch(() => {});
+    }
     function bindStreams() {
-      if (localVideoRef.current && localStreamRef.current && localVideoRef.current.srcObject !== localStreamRef.current) {
-        localVideoRef.current.srcObject = localStreamRef.current;
-      }
-      if (remoteVideoRef.current && remoteStreamRef.current && remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
-        remoteVideoRef.current.srcObject = remoteStreamRef.current;
-      }
-      if (remoteAudioRef.current && remoteStreamRef.current && remoteAudioRef.current.srcObject !== remoteStreamRef.current) {
-        remoteAudioRef.current.srcObject = remoteStreamRef.current;
-      }
+      attach(localVideoRef.current, localStreamRef.current, true);
+      attach(remoteVideoRef.current, remoteStreamRef.current, true);
+      attach(remoteAudioRef.current, remoteStreamRef.current, !speakerOn);
     }
     bindStreams();
     const id = setInterval(bindStreams, 500);
     return () => clearInterval(id);
-  }, [localStreamRef, remoteStreamRef, localVideoRef, remoteVideoRef, remoteAudioRef]);
+  }, [localStreamRef, remoteStreamRef, localVideoRef, remoteVideoRef, remoteAudioRef, speakerOn]);
 
   const other = participants.find((person) => person.id !== call.callerId) || call.caller;
   const connected = call.status === 'connected' || call.status === 'completed';
@@ -1135,7 +1160,7 @@ function CallOverlay({ call, status, seconds, micMuted, cameraOff, speakerOn, lo
       <div className="relative min-h-0 flex-1">
         {call.callType === 'video' ? (
           <>
-            <video ref={remoteVideoRef} autoPlay playsInline className="h-full w-full object-cover" />
+            <video ref={remoteVideoRef} autoPlay muted playsInline className="h-full w-full object-cover" />
             <video ref={localVideoRef} autoPlay muted playsInline className="absolute right-4 top-5 h-36 w-24 rounded-[22px] border-2 border-white/70 object-cover shadow-soft" />
           </>
         ) : (
