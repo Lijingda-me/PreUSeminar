@@ -1,5 +1,5 @@
 import React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Bookmark, Check, CheckCheck, Copy, CornerUpLeft, Download, Edit3, Flag, Forward, Mic, MicOff, Phone, PhoneOff, Pin, Send, Shield, Smile, Trash2, UsersRound, Video, VideoOff, Volume2, X, ChevronLeft, Crown, Info, Plus } from 'lucide-react';
 import AppShell from '../components/AppShell';
