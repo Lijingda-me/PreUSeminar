@@ -56,6 +56,9 @@ export default function Messages() {
   const signalCursorRef = useRef(0);
   const recorderRef = useRef(null);
   const recordingChunksRef = useRef([]);
+  const recordingCanvasRef = useRef(null);
+  const recordingFrameRef = useRef(null);
+  const recordingAudioContextRef = useRef(null);
   const callStartedAtRef = useRef(null);
   const activeCallRef = useRef(null);
   const ringTimerRef = useRef(null);
@@ -200,7 +203,7 @@ export default function Messages() {
   useEffect(() => {
     if (!activeCall || activeCall.status !== 'connected') return;
     if (!callStartedAtRef.current) callStartedAtRef.current = activeCall.acceptedAt || new Date().toISOString();
-    if (!recorderRef.current && localStreamRef.current) startRecording(localStreamRef.current, activeCall);
+    if (!recorderRef.current && localStreamRef.current) startRecording(activeCall);
     const id = setInterval(() => {
       const start = callStartedAtRef.current || activeCall.acceptedAt || activeCall.startedAt;
       setCallSeconds(Math.max(0, Math.floor((Date.now() - new Date(start).getTime()) / 1000)));
@@ -217,6 +220,11 @@ export default function Messages() {
   function stopLocalMedia() {
     localStreamRef.current?.getTracks().forEach((track) => track.stop());
     localStreamRef.current = null;
+    if (recordingFrameRef.current) cancelAnimationFrame(recordingFrameRef.current);
+    recordingFrameRef.current = null;
+    recordingAudioContextRef.current?.close?.();
+    recordingAudioContextRef.current = null;
+    recordingCanvasRef.current = null;
     peerRef.current?.close();
     peerRef.current = null;
   }
@@ -251,11 +259,84 @@ export default function Messages() {
     await api.post(`/messages/calls/${callId}/signals`, { type, payload });
   }
 
-  function startRecording(stream, call) {
+  function createVideoElement(stream, muted = true) {
+    const video = document.createElement('video');
+    video.srcObject = stream;
+    video.muted = muted;
+    video.playsInline = true;
+    video.autoplay = true;
+    video.play().catch(() => {});
+    return video;
+  }
+
+  function buildRecordedStream(call) {
+    const local = localStreamRef.current;
+    const remote = remoteStreamRef.current;
+    if (!local) return null;
+
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const audioContext = AudioCtx ? new AudioCtx() : null;
+    let audioStream = null;
+    if (audioContext) {
+      const destination = audioContext.createMediaStreamDestination();
+      [local, remote].filter(Boolean).forEach((stream) => {
+        if (!stream.getAudioTracks().length) return;
+        const source = audioContext.createMediaStreamSource(stream);
+        source.connect(destination);
+      });
+      recordingAudioContextRef.current = audioContext;
+      audioStream = destination.stream;
+    }
+
+    if (call.callType !== 'video') {
+      return new MediaStream(audioStream?.getAudioTracks() || local.getAudioTracks());
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 720;
+    canvas.height = 1280;
+    recordingCanvasRef.current = canvas;
+    const ctx = canvas.getContext('2d');
+    const localVideo = createVideoElement(local);
+    const remoteVideo = createVideoElement(remote || new MediaStream());
+
+    function draw() {
+      ctx.fillStyle = '#080b18';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      if (remoteVideo.videoWidth) {
+        ctx.drawImage(remoteVideo, 0, 0, canvas.width, canvas.height);
+      } else {
+        ctx.fillStyle = '#1f2a44';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '700 34px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText('Remote video', canvas.width / 2, canvas.height / 2);
+      }
+      const insetW = 210;
+      const insetH = 300;
+      const insetX = canvas.width - insetW - 28;
+      const insetY = 34;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(insetX - 4, insetY - 4, insetW + 8, insetH + 8);
+      if (localVideo.videoWidth) ctx.drawImage(localVideo, insetX, insetY, insetW, insetH);
+      recordingFrameRef.current = requestAnimationFrame(draw);
+    }
+    draw();
+
+    const canvasStream = canvas.captureStream(24);
+    return new MediaStream([
+      ...canvasStream.getVideoTracks(),
+      ...(audioStream?.getAudioTracks() || local.getAudioTracks())
+    ]);
+  }
+
+  function startRecording(call) {
+    const stream = buildRecordedStream(call);
     if (!window.MediaRecorder || !stream) return;
     recordingChunksRef.current = [];
-    const preferred = stream.getVideoTracks().length ? 'video/webm;codecs=vp8,opus' : 'audio/webm;codecs=opus';
-    const fallback = stream.getVideoTracks().length ? 'video/webm' : 'audio/webm';
+    const preferred = call.callType === 'video' ? 'video/webm;codecs=vp8,opus' : 'audio/webm;codecs=opus';
+    const fallback = call.callType === 'video' ? 'video/webm' : 'audio/webm';
     const mimeType = MediaRecorder.isTypeSupported(preferred) ? preferred : MediaRecorder.isTypeSupported(fallback) ? fallback : '';
     const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
     recorder.ondataavailable = (event) => {
@@ -360,7 +441,7 @@ export default function Messages() {
       setCallStatus('Connected');
       callStartedAtRef.current = data.call.acceptedAt || new Date().toISOString();
       await createPeer(data.call, stream, false);
-      startRecording(stream, data.call);
+      startRecording(data.call);
     } catch {
       showToast('Call could not be accepted.', 'error');
     }
@@ -472,6 +553,22 @@ export default function Messages() {
   }
 
   const pinnedMessages = messages.filter((message) => message.pinned && !message.deleted);
+  const timelineItems = useMemo(() => [
+    ...callLogs.map((call) => ({
+      kind: 'call',
+      id: `call-${call.id}`,
+      timestamp: call.endedAt || call.startedAt || call.createdAt,
+      call
+    })),
+    ...messages
+      .filter((message) => !hiddenMessageIds.includes(message.id))
+      .map((message) => ({
+        kind: 'message',
+        id: `message-${message.id}`,
+        timestamp: message.createdAt || message.deliveredAt,
+        message
+      }))
+  ].sort((a, b) => String(a.timestamp || '').localeCompare(String(b.timestamp || ''))), [callLogs, messages, hiddenMessageIds]);
 
   const isGroupOwner = activeChat?.ownerId === user.id;
   const isGroupModerator = (activeChat?.moderators || []).includes(user.id);
@@ -840,15 +937,16 @@ export default function Messages() {
 
       <div className="mt-4 flex min-h-[72vh] flex-col pb-28">
         <div className="sleek-scrollbar max-h-[calc(100vh-210px)] flex-1 space-y-3 overflow-y-auto pb-4 pr-1">
-          {callLogs.map((call) => (
-            <CallLogCard key={call.id} call={call} onDownload={() => downloadRecording(call)} formatDuration={formatDuration} />
-          ))}
-          {messages.filter((message) => !hiddenMessageIds.includes(message.id)).map((message) => {
+          {timelineItems.map((item) => {
+            if (item.kind === 'call') {
+              return <CallLogCard key={item.id} call={item.call} participants={participants} onDownload={() => downloadRecording(item.call)} formatDuration={formatDuration} />;
+            }
+            const message = item.message;
             const mine = message.senderId === user.id;
             const replied = message.replyToId ? messageById(message.replyToId) : null;
             return (
               <button
-                key={message.id}
+                key={item.id}
                 ref={(node) => { messageRefs.current[message.id] = node; }}
                 type="button"
                 onClick={(event) => !message.deleted && openMessageMenu(event, message)}
@@ -950,8 +1048,8 @@ export default function Messages() {
           localVideoRef={localVideoRef}
           remoteVideoRef={remoteVideoRef}
           remoteAudioRef={remoteAudioRef}
-          localStream={localStreamRef.current}
-          remoteStream={remoteStreamRef.current}
+          localStreamRef={localStreamRef}
+          remoteStreamRef={remoteStreamRef}
           onToggleMic={toggleMic}
           onToggleCamera={toggleCamera}
           onToggleSpeaker={() => setSpeakerOn((value) => !value)}
@@ -965,9 +1063,13 @@ export default function Messages() {
   );
 }
 
-function CallLogCard({ call, onDownload, formatDuration }) {
+function CallLogCard({ call, participants, onDownload, formatDuration }) {
   const statusLabel = call.status === 'completed' ? 'Completed' : call.status === 'declined' ? 'Declined' : call.status === 'missed' ? 'Missed' : 'Ended';
   const date = new Date(call.endedAt || call.startedAt || call.createdAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+  const participantNames = (call.participantIds || [])
+    .map((id) => participants.find((person) => person.id === id)?.name)
+    .filter(Boolean)
+    .join(', ');
   return (
     <article className="mx-auto w-[92%] rounded-[22px] border border-brand-blue/10 bg-white p-4 text-center shadow-soft">
       <div className="mx-auto mb-2 grid h-11 w-11 place-items-center rounded-full bg-brand-blue/10 text-brand-blue">
@@ -975,6 +1077,7 @@ function CallLogCard({ call, onDownload, formatDuration }) {
       </div>
       <p className="text-sm font-black">{call.callType === 'video' ? 'Video' : 'Voice'} call - {statusLabel}</p>
       <p className="mt-1 text-xs font-semibold text-brand-muted">{date} - {formatDuration(call.durationSeconds || 0)}</p>
+      {participantNames && <p className="mt-1 truncate text-xs font-semibold text-brand-muted">With {participantNames}</p>}
       {call.status === 'completed' && (
         <button
           onClick={onDownload}
@@ -1007,12 +1110,23 @@ function IncomingCallSheet({ call, participants, onAccept, onDecline }) {
   );
 }
 
-function CallOverlay({ call, status, seconds, micMuted, cameraOff, speakerOn, localVideoRef, remoteVideoRef, remoteAudioRef, localStream, remoteStream, onToggleMic, onToggleCamera, onToggleSpeaker, onSwitchToVideo, onEnd, formatDuration, participants }) {
+function CallOverlay({ call, status, seconds, micMuted, cameraOff, speakerOn, localVideoRef, remoteVideoRef, remoteAudioRef, localStreamRef, remoteStreamRef, onToggleMic, onToggleCamera, onToggleSpeaker, onSwitchToVideo, onEnd, formatDuration, participants }) {
   useEffect(() => {
-    if (localVideoRef.current && localStream) localVideoRef.current.srcObject = localStream;
-    if (remoteVideoRef.current && remoteStream) remoteVideoRef.current.srcObject = remoteStream;
-    if (remoteAudioRef.current && remoteStream) remoteAudioRef.current.srcObject = remoteStream;
-  }, [localStream, remoteStream, localVideoRef, remoteVideoRef, remoteAudioRef]);
+    function bindStreams() {
+      if (localVideoRef.current && localStreamRef.current && localVideoRef.current.srcObject !== localStreamRef.current) {
+        localVideoRef.current.srcObject = localStreamRef.current;
+      }
+      if (remoteVideoRef.current && remoteStreamRef.current && remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
+        remoteVideoRef.current.srcObject = remoteStreamRef.current;
+      }
+      if (remoteAudioRef.current && remoteStreamRef.current && remoteAudioRef.current.srcObject !== remoteStreamRef.current) {
+        remoteAudioRef.current.srcObject = remoteStreamRef.current;
+      }
+    }
+    bindStreams();
+    const id = setInterval(bindStreams, 500);
+    return () => clearInterval(id);
+  }, [localStreamRef, remoteStreamRef, localVideoRef, remoteVideoRef, remoteAudioRef]);
 
   const other = participants.find((person) => person.id !== call.callerId) || call.caller;
   const connected = call.status === 'connected' || call.status === 'completed';
