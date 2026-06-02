@@ -118,7 +118,7 @@ export default function Profile() {
         <div className="relative h-40 bg-[url('https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center">
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
           <div className="absolute right-4 top-4 flex gap-2">
-            <button onClick={openShareSheet} className="grid h-11 w-11 place-items-center rounded-full bg-white/90 text-brand-blue shadow-soft" aria-label="Share profile"><Share2 /></button>
+            <button onClick={copyShareLink} className="grid h-11 w-11 place-items-center rounded-full bg-white/90 text-brand-blue shadow-soft" aria-label="Copy profile link"><Share2 /></button>
             <button onClick={() => setShowMore((value) => !value)} className="grid h-11 w-11 place-items-center rounded-full bg-white/90 text-brand-blue shadow-soft" aria-label="More profile actions"><MoreHorizontal /></button>
           </div>
 
@@ -159,7 +159,7 @@ export default function Profile() {
 
           <div className="mt-4 grid grid-cols-[1fr_92px_64px] gap-2">
             <button onClick={() => setMode('edit')} className="h-12 rounded-full bg-brand-blue text-sm font-black text-white">Edit Profile</button>
-            <button onClick={openShareSheet} className="h-12 rounded-full bg-brand-cream text-sm font-black text-brand-blue">Share</button>
+            <button onClick={copyShareLink} className="h-12 rounded-full bg-brand-cream text-sm font-black text-brand-blue">Share</button>
             <button onClick={() => setShowMore((value) => !value)} className="grid h-12 place-items-center rounded-full bg-brand-cream text-brand-blue"><MoreHorizontal /></button>
           </div>
 
