@@ -7,6 +7,7 @@ import Avatar from '../components/Avatar';
 import { api } from '../api/client';
 import { useAuthStore } from '../store/authStore';
 import { useToastStore } from '../store/toastStore';
+import { TOUR_MATCH_ID, tourMentor, tourMessages, useTourStore } from '../store/tourStore';
 
 const quickEmojis = ['🙂', '😊', '👍', '❤️', '🙏', '🎉', '💡', '✨'];
 
@@ -15,6 +16,10 @@ export default function Messages() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const showToast = useToastStore((state) => state.showToast);
+  const tourActive = useTourStore((state) => state.active);
+  const tourStep = useTourStore((state) => state.step);
+  const tourPhase = useTourStore((state) => state.phase);
+  const isTourConversation = tourActive && tourStep === 4 && matchId === TOUR_MATCH_ID;
   const [matches, setMatches] = useState([]);
   const [groupChats, setGroupChats] = useState([]);
   const [connected, setConnected] = useState([]);
@@ -86,6 +91,23 @@ export default function Messages() {
   useEffect(() => { loadInbox(); }, []);
 
   const refreshActiveChat = useCallback(async () => {
+    if (isTourConversation) {
+      const demoMessages = tourMessages.map((message) => message.id === 'tour-msg-you'
+        ? { ...message, senderId: user.id, sender: user }
+        : message);
+      setMessages(demoMessages);
+      setCallLogs([]);
+      setParticipants([
+        { ...user, photo: null },
+        { ...tourMentor.user, profile: tourMentor.profile, photo: null }
+      ]);
+      setActiveChat({
+        type: 'match',
+        title: 'Sarah Tan',
+        about: '95% compatibility'
+      });
+      return;
+    }
     if (matchId) {
       const { data } = await api.get(`/messages/${matchId}`, { silent: true });
       setMessages(data.messages || []);
@@ -115,7 +137,7 @@ export default function Messages() {
       });
       setAboutDraft(about);
     }
-  }, [matchId, groupChatId]);
+  }, [groupChatId, isTourConversation, matchId, user]);
 
   useEffect(() => {
     setShowGroupInfo(false);
@@ -126,12 +148,13 @@ export default function Messages() {
     if (!matchId && !groupChatId) return;
 
     refreshActiveChat().catch(() => showToast('Messages could not load right now.', 'error'));
+    if (isTourConversation) return;
     const id = setInterval(() => {
       if (activeCallRef.current) return;
       refreshActiveChat().catch(() => {});
     }, 10000);
     return () => clearInterval(id);
-  }, [matchId, groupChatId, refreshActiveChat, showToast]);
+  }, [groupChatId, isTourConversation, matchId, refreshActiveChat, showToast]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -240,6 +263,7 @@ export default function Messages() {
   }, [activeCall]);
 
   function callScope() {
+    if (isTourConversation) return null;
     if (matchId) return { scopeType: 'match', scopeId: matchId };
     if (groupChatId) return { scopeType: 'group', scopeId: groupChatId };
     return null;
@@ -766,6 +790,7 @@ export default function Messages() {
 
   async function send(event) {
     event.preventDefault();
+    if (isTourConversation) return;
     if (!body.trim()) return;
     const url = groupChatId ? `/messages/group-chats/${groupChatId}` : `/messages/${matchId}`;
     const { data } = await api.post(url, { body, replyToId: replyTarget?.id || null });
@@ -881,7 +906,7 @@ export default function Messages() {
   }
 
   return (
-    <AppShell hideBottomNav>
+    <AppShell hideBottomNav={!isTourConversation || tourPhase !== 'ready'}>
       <div className="sticky top-0 z-20 -mx-5 -mt-5 border-b border-slate-100 bg-white/95 px-5 pb-3 pt-5 backdrop-blur">
         <div className="flex items-center gap-3">
           <Link to="/messages" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-cream text-brand-text" aria-label="Back to messages">
@@ -989,7 +1014,7 @@ export default function Messages() {
       )}
 
       <div className="mt-4 flex min-h-[72vh] flex-col pb-28">
-        <div className="sleek-scrollbar max-h-[calc(100vh-210px)] flex-1 space-y-3 overflow-y-auto pb-4 pr-1">
+        <div data-tour="conversation-area" className="sleek-scrollbar max-h-[calc(100vh-210px)] flex-1 space-y-3 overflow-y-auto pb-4 pr-1">
           {timelineItems.map((item) => {
             if (item.kind === 'call') {
               return <CallLogCard key={item.id} call={item.call} participants={participants} onDownload={() => downloadRecording(item.call)} formatDuration={formatDuration} />;

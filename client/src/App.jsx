@@ -16,6 +16,7 @@ import PublicProfile from './pages/PublicProfile';
 import AdminDashboard from './pages/AdminDashboard';
 import StaffSchedule from './pages/StaffSchedule';
 import Toast from './components/Toast';
+import AppTour from './components/AppTour';
 import ProtectedRoute from './routes/ProtectedRoute';
 import { useAuthStore } from './store/authStore';
 
@@ -54,6 +55,7 @@ export default function App() {
         </Route>
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+      <AppTour />
       <Toast />
     </>
   );

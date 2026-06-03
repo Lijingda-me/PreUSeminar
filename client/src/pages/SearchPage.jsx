@@ -6,6 +6,7 @@ import AppShell from '../components/AppShell';
 import Avatar from '../components/Avatar';
 import { api } from '../api/client';
 import { useToastStore } from '../store/toastStore';
+import { tourMentor, useTourStore } from '../store/tourStore';
 
 const popularSearches = ['Finance', 'Career Guidance', 'Leadership', 'Interview Preparation', 'Technology', 'Entrepreneurship'];
 const filters = ['All', 'Mentors', 'Workshops', 'Groups', 'Events', 'Saved'];
@@ -35,6 +36,10 @@ export default function SearchPage() {
   const [advanced, setAdvanced] = useState({ industry: '', language: '', availability: '', style: '', minimumCompatibility: 0 });
   const [groupForm, setGroupForm] = useState({ name: '', topic: '', description: '' });
   const showToast = useToastStore((state) => state.showToast);
+  const tourActive = useTourStore((state) => state.active);
+  const tourStep = useTourStore((state) => state.step);
+  const setTourStep = useTourStore((state) => state.setStep);
+  const inSearchTour = tourActive && tourStep === 1;
 
   const suggestions = useMemo(() => suggestionsFor(q), [q]);
 
@@ -131,10 +136,14 @@ export default function SearchPage() {
     }
   }
 
-  const visibleResults = activeFilter === 'Saved' ? results.filter((item) => savedIds.includes(item.user.id)) : results;
+  const baseResults = activeFilter === 'Saved' ? results.filter((item) => savedIds.includes(item.user.id)) : results;
+  const visibleResults = inSearchTour
+    ? [tourMentor, ...baseResults.filter((item) => item.user.id !== tourMentor.user.id)]
+    : baseResults;
 
   return (
     <AppShell>
+      <div data-tour="search-page">
       <div className="sticky top-0 z-30 -mx-5 -mt-5 bg-brand-cream/95 px-5 pb-3 pt-5 backdrop-blur">
         <h1 className="text-3xl font-black">Search</h1>
         <div className="mt-4 flex gap-2 rounded-[24px] bg-white p-2 shadow-soft">
@@ -185,7 +194,16 @@ export default function SearchPage() {
             </select>
           </div>
           <div className="grid gap-3">
-            {visibleResults.map((candidate) => <MentorResult key={candidate.user.id} candidate={candidate} saved={savedIds.includes(candidate.user.id)} onSave={() => save(candidate)} onConnect={() => connect(candidate)} />)}
+            {visibleResults.map((candidate) => (
+              <MentorResult
+                key={candidate.user.id}
+                candidate={candidate}
+                saved={savedIds.includes(candidate.user.id)}
+                onSave={() => save(candidate)}
+                onConnect={() => connect(candidate)}
+                onViewProfile={() => candidate.onboarding && setTourStep(2)}
+              />
+            ))}
             {!visibleResults.length && <EmptySearch onSearch={setQ} />}
           </div>
         </section>
@@ -227,6 +245,7 @@ export default function SearchPage() {
       )}
 
       {showFilters && <AdvancedFilters advanced={advanced} setAdvanced={setAdvanced} onClose={() => setShowFilters(false)} />}
+      </div>
     </AppShell>
   );
 }
@@ -259,7 +278,7 @@ function EventCard({ eventItem, loading, onToggle }) {
   );
 }
 
-function MentorResult({ candidate, saved, onSave, onConnect }) {
+function MentorResult({ candidate, saved, onSave, onConnect, onViewProfile }) {
   const { user, profile, compatibility } = candidate;
   const requested = candidate.requestStatus === 'pending';
   const connected = candidate.requestStatus === 'connected';
@@ -284,7 +303,15 @@ function MentorResult({ candidate, saved, onSave, onConnect }) {
         </div>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <Link to={`/profiles/${user.id}`} state={{ candidate }} className="grid h-11 place-items-center rounded-full bg-brand-cream text-sm font-black text-brand-blue">View Profile</Link>
+        <Link
+          to={`/profiles/${user.id}`}
+          state={{ candidate, onboardingTour: candidate.onboarding }}
+          onClick={onViewProfile}
+          data-tour={candidate.onboarding ? 'search-view-profile' : undefined}
+          className="grid h-11 place-items-center rounded-full bg-brand-cream text-sm font-black text-brand-blue"
+        >
+          View Profile
+        </Link>
         <button
           onClick={onConnect}
           disabled={requested || connected}

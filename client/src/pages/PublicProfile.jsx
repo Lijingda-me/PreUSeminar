@@ -1,21 +1,39 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Award, Briefcase, CalendarDays, ChevronLeft, Languages, Star } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import Avatar from '../components/Avatar';
 import { api } from '../api/client';
+import { useToastStore } from '../store/toastStore';
+import { TOUR_MENTOR_ID, tourMentor, useTourStore } from '../store/tourStore';
 
 export default function PublicProfile() {
   const { userId } = useParams();
   const location = useLocation();
-  const [data, setData] = useState(location.state?.candidate || null);
+  const navigate = useNavigate();
+  const showToast = useToastStore((state) => state.showToast);
+  const tourActive = useTourStore((state) => state.active);
+  const tourStep = useTourStore((state) => state.step);
+  const setTourStep = useTourStore((state) => state.setStep);
+  const isTourProfile = tourActive && tourStep === 2 && userId === TOUR_MENTOR_ID;
+  const [data, setData] = useState(userId === TOUR_MENTOR_ID ? tourMentor : location.state?.candidate || null);
 
   useEffect(() => {
+    if (userId === TOUR_MENTOR_ID) {
+      setData(tourMentor);
+      return;
+    }
     if (!data) {
       api.get(`/profiles/${userId}`).then(({ data }) => setData({ ...data, compatibility: { score: 0, explanation: '' } }));
     }
   }, [userId]);
+
+  function sendTourRequest() {
+    showToast('Connection Request Sent');
+    setTourStep(3);
+    window.setTimeout(() => navigate('/matches'), 650);
+  }
 
   if (!data) return <AppShell><div className="ios-card p-6">Loading profile...</div></AppShell>;
 
@@ -35,6 +53,15 @@ export default function PublicProfile() {
           </div>
         </div>
         <div className="space-y-5 p-5">
+          {isTourProfile && (
+            <button
+              onClick={sendTourRequest}
+              data-tour="profile-connect"
+              className="h-14 w-full rounded-full bg-brand-blue text-base font-black text-white shadow-soft"
+            >
+              Connect
+            </button>
+          )}
           <Section title="About">
             <p className="leading-7 text-brand-muted">{profile.bio}</p>
           </Section>

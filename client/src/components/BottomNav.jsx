@@ -32,7 +32,7 @@ export default function BottomNav() {
     : items;
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md px-6 pb-4">
+    <nav data-tour="bottom-nav" className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md px-6 pb-4">
       <div className="grid grid-cols-5 rounded-[30px] bg-white px-2 py-3 shadow-soft">
         {navItems.map(({ to, label, icon: Icon }) => (
           <NavLink key={to} to={to} className={({ isActive }) => `flex flex-col items-center gap-1 rounded-2xl px-1 py-1 text-[10px] font-semibold ${isActive ? 'text-brand-blue' : 'text-brand-muted'}`}>

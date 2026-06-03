@@ -1,12 +1,14 @@
 import React from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import { Award, Bell, Camera, CheckCircle2, Copy, Eye, ImagePlus, Info, Languages, Lock, LogOut, MoreHorizontal, Palette, Share2, ShieldAlert, Sparkles, Trash2, UserRound, X } from 'lucide-react';
+import { Award, Bell, Camera, CheckCircle2, Copy, Eye, HelpCircle, ImagePlus, Info, Languages, Lock, LogOut, MoreHorizontal, Palette, Share2, ShieldAlert, Sparkles, Trash2, UserRound, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import Button from '../components/Button';
 import Avatar from '../components/Avatar';
 import { api } from '../api/client';
 import { useAuthStore } from '../store/authStore';
 import { useToastStore } from '../store/toastStore';
+import { useTourStore } from '../store/tourStore';
 
 const tabs = ['About', 'Experience', 'Mentor', 'Activity', 'Settings'];
 
@@ -14,6 +16,8 @@ export default function Profile() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const showToast = useToastStore((state) => state.showToast);
+  const restartTour = useTourStore((state) => state.restart);
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [settings, setSettings] = useState(null);
   const [activeTab, setActiveTab] = useState('About');
@@ -102,6 +106,12 @@ export default function Profile() {
     setShowShareSheet(true);
   }
 
+  function startAppTour() {
+    restartTour();
+    showToast('App tour restarted', 'info');
+    navigate('/swipe');
+  }
+
   if (!profile && !['admin', 'staff'].includes(user.role)) {
     return <AppShell><div className="ios-card p-6">Loading profile...</div></AppShell>;
   }
@@ -187,7 +197,7 @@ export default function Profile() {
         {activeTab === 'Experience' && <ExperienceTab profile={profile} setProfile={setProfile} mode={mode} />}
         {activeTab === 'Mentor' && <MentorshipTab profile={profile} setProfile={setProfile} mode={mode} />}
         {activeTab === 'Activity' && <ActivityTab user={user} />}
-        {activeTab === 'Settings' && <SettingsTab settings={settings} toggleSetting={toggleSetting} onLogoutClick={() => setShowLogoutConfirm(true)} user={user} />}
+        {activeTab === 'Settings' && <SettingsTab settings={settings} toggleSetting={toggleSetting} onLogoutClick={() => setShowLogoutConfirm(true)} onStartTour={startAppTour} user={user} />}
       </section>
 
       {mode === 'edit' && profile && <Button className="mt-5 w-full" onClick={saveProfile}>Save profile changes</Button>}
@@ -331,7 +341,7 @@ function ActivityTab({ user }) {
   );
 }
 
-function SettingsTab({ settings, toggleSetting, onLogoutClick, user }) {
+function SettingsTab({ settings, toggleSetting, onLogoutClick, onStartTour, user }) {
   return (
     <>
       <Card title="Accessibility & Notifications">
@@ -349,6 +359,15 @@ function SettingsTab({ settings, toggleSetting, onLogoutClick, user }) {
         <InfoRow icon={Palette} label="Theme" value="Light mode" />
         <InfoRow icon={Languages} label="Language" value={settings?.language || 'English'} />
       </Card>
+
+      {user.role === 'learner' && (
+        <Card title="Help">
+          <button onClick={onStartTour} className="flex w-full items-center justify-between rounded-2xl bg-brand-blue/10 p-4 text-left font-black text-brand-blue">
+            <span className="flex items-center gap-2"><HelpCircle size={18} /> App Tour</span>
+            <span className="rounded-full bg-white px-3 py-1 text-xs">Restart</span>
+          </button>
+        </Card>
+      )}
 
       {['admin', 'staff'].includes(user.role) && (
         <Card title={`${user.role === 'admin' ? 'Admin' : 'Staff'} Controls`}>
