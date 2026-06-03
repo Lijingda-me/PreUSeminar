@@ -282,7 +282,7 @@ export default function Profile() {
 
       {showContactSheet && (
         <div className="fixed inset-0 z-50 grid place-items-end bg-black/40 p-5 backdrop-blur-sm" onClick={() => setShowContactSheet(false)}>
-          <section className="w-full rounded-[30px] bg-white p-5 shadow-soft" onClick={(event) => event.stopPropagation()}>
+          <section className="mx-auto w-full max-w-md rounded-[30px] bg-white p-5 shadow-soft" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-black uppercase text-brand-blue">BridgeUp support</p>
