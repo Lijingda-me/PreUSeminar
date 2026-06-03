@@ -287,7 +287,7 @@ function MentorResult({ candidate, saved, onSave, onConnect, onViewProfile }) {
   const requested = candidate.requestStatus === 'pending';
   const connected = candidate.requestStatus === 'connected';
   return (
-    <article className="rounded-[24px] bg-white p-3 shadow-soft">
+    <article data-tour={candidate.onboarding ? 'search-mock-card' : undefined} className="rounded-[24px] bg-white p-3 shadow-soft">
       <div className="flex gap-3">
         <Avatar name={user.name} src={profile.photo} className="h-20 w-20 text-2xl" rounded="rounded-[20px]" />
         <div className="min-w-0 flex-1">

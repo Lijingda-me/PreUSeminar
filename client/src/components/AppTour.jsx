@@ -21,7 +21,8 @@ function stepsFor(role) {
   },
   {
     route: '/search',
-    selector: '[data-tour="search-page"]',
+    selector: '[data-tour="search-mock-card"]',
+    placement: 'top',
     title: 'Explore Beyond Swiping',
     body: `Prefer searching instead? Search helps you find specific ${peerKind}, discover community groups, and browse workshops or events.`,
     detail: `Tap View Profile on ${peerName} to learn more before connecting.`,
@@ -130,7 +131,11 @@ export default function AppTour() {
   const cardLeft = clamp(spotlight.left + spotlight.width / 2 - cardWidth / 2, 16, window.innerWidth - cardWidth - 16);
   const cardHeight = Math.min(390, window.innerHeight - 32);
   const targetCenter = spotlight.top + spotlight.height / 2;
-  const cardTop = targetCenter < window.innerHeight / 2 ? window.innerHeight - cardHeight - 16 : 16;
+  const cardTop = current.placement === 'top'
+    ? 16
+    : targetCenter < window.innerHeight / 2
+      ? window.innerHeight - cardHeight - 16
+      : 16;
   const skipLeft = clamp(spotlight.left + 12, 16, window.innerWidth - 118);
   const connectLeft = clamp(spotlight.left + spotlight.width - 140, 16, window.innerWidth - 156);
   const progress = phase === 'ready' ? 5 : step + 1;
