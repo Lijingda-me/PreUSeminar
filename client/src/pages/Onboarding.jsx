@@ -84,7 +84,7 @@ export default function Onboarding() {
 
   return (
     <AppShell hideBottomNav>
-      <div className="flex min-h-[calc(100vh-40px)] flex-col">
+      <div className="flex min-h-[calc(100vh-40px)] flex-col justify-center">
         <header>
           <p className="text-sm font-black uppercase tracking-[0.16em] text-brand-blue">BridgeUp setup</p>
           <h1 className="mt-1 text-[34px] font-black leading-tight">{user.role === 'mentor' ? 'Mentor onboarding' : 'Learner onboarding'}</h1>
@@ -100,7 +100,7 @@ export default function Onboarding() {
           </div>
         </header>
 
-        <section className="mt-5 flex-1 rounded-[32px] bg-white p-5 shadow-soft">
+        <section className="sleek-scrollbar mt-5 max-h-[56vh] min-h-[420px] overflow-y-auto rounded-[32px] bg-white p-5 shadow-soft">
           {step === 0 && <WelcomeCard role={user.role} />}
           {step === 1 && (
             <div className="grid gap-4">
@@ -148,7 +148,7 @@ export default function Onboarding() {
           )}
         </section>
 
-        <footer className="sticky bottom-0 -mx-5 mt-4 bg-brand-cream/95 px-5 pb-5 pt-3 backdrop-blur">
+        <footer className="-mx-5 mt-4 bg-brand-cream/95 px-5 pb-5 pt-3 backdrop-blur">
           <div className="grid grid-cols-[54px_1fr] gap-3">
             <button
               type="button"
