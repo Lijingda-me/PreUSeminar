@@ -229,7 +229,7 @@ export default function AppTour() {
           initial={{ opacity: 0, y: 18, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 12, scale: 0.98 }}
-          className="sleek-scrollbar pointer-events-auto fixed overflow-y-auto rounded-[28px] border border-white/70 bg-white/98 p-4 text-brand-text shadow-[0_24px_80px_rgba(0,0,0,0.32)] backdrop-blur-xl"
+          className="sleek-scrollbar pointer-events-auto fixed overflow-y-auto rounded-[28px] border border-white bg-white p-4 text-brand-text shadow-[0_24px_80px_rgba(0,0,0,0.36)]"
           style={{ top: cardTop, left: cardLeft, width: cardWidth, maxHeight: cardHeight }}
         >
           <div className="mb-3 flex items-center justify-between">
@@ -244,7 +244,7 @@ export default function AppTour() {
           </div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-brand-blue">Step {progress} of 5</p>
           <h2 className="mt-1 text-[24px] font-black leading-tight">{current.title}</h2>
-          <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">{current.body}</p>
+          <p className="mt-2 text-sm font-bold leading-6 text-slate-700">{current.body}</p>
           {current.detail && <p className="mt-3 rounded-[18px] bg-brand-blue/10 p-3 text-xs font-bold leading-5 text-brand-blue">{current.detail}</p>}
           {step === 0 && !swipeTried && phase !== 'ready' && (
             <p className="mt-3 text-xs font-black text-brand-coral">Try a left or right swipe on the card to continue.</p>
