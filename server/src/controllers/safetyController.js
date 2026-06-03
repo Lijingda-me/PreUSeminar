@@ -30,6 +30,21 @@ export async function reportGroup(req, res) {
   res.status(201).json({ report });
 }
 
+export async function contactSupport(req, res) {
+  const details = String(req.body.details || '').trim();
+  if (!details) return res.status(400).json({ message: 'Tell us what you need help with.' });
+  const report = await insert('reports', {
+    reporterId: req.user.id,
+    reportedUserId: null,
+    targetType: 'contact',
+    targetId: req.user.id,
+    reason: 'Contact Us',
+    details,
+    status: 'open'
+  });
+  res.status(201).json({ report });
+}
+
 export async function blockUser(req, res) {
   const target = await findOne('users', (item) => item.id === req.params.userId);
   if (!target) return res.status(404).json({ message: 'User not found.' });

@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import { adminBanList, adminBanUser, adminCloseReport, adminMessageReport, adminReports, adminUnbanUser, blockUser, reportGroup, reportUser, settings, updateSettings } from '../controllers/safetyController.js';
+import { adminBanList, adminBanUser, adminCloseReport, adminMessageReport, adminReports, adminUnbanUser, blockUser, contactSupport, reportGroup, reportUser, settings, updateSettings } from '../controllers/safetyController.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 
 export const safetyRoutes = Router();
 
 safetyRoutes.post('/reports', requireAuth, reportUser);
 safetyRoutes.post('/reports/group/:groupId', requireAuth, reportGroup);
+safetyRoutes.post('/contact', requireAuth, contactSupport);
 safetyRoutes.get('/admin/reports', requireAuth, requireRole('admin'), adminReports);
 safetyRoutes.get('/admin/bans', requireAuth, requireRole('admin'), adminBanList);
 safetyRoutes.post('/admin/reports/:reportId/messages', requireAuth, requireRole('admin'), adminMessageReport);

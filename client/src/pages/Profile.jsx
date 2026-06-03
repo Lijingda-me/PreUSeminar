@@ -1,6 +1,6 @@
 import React from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import { Award, Bell, Camera, CheckCircle2, Copy, Eye, HelpCircle, ImagePlus, Info, Languages, Lock, LogOut, MoreHorizontal, Palette, Share2, ShieldAlert, Sparkles, Trash2, UserRound, X } from 'lucide-react';
+import { Award, Bell, Camera, CheckCircle2, Copy, Eye, HelpCircle, ImagePlus, Info, Languages, Lock, LogOut, MessageCircle, MoreHorizontal, Palette, Send, Share2, ShieldAlert, Sparkles, Trash2, UserRound, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import Button from '../components/Button';
@@ -27,6 +27,9 @@ export default function Profile() {
   const [showMore, setShowMore] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
+  const [showContactSheet, setShowContactSheet] = useState(false);
+  const [contactText, setContactText] = useState('');
+  const [sendingContact, setSendingContact] = useState(false);
 
   useEffect(() => {
     Promise.all([api.get('/profiles/me'), api.get('/safety/settings')]).then(([profileRes, settingsRes]) => {
@@ -110,6 +113,26 @@ export default function Profile() {
     restartTour();
     showToast('App tour restarted', 'info');
     navigate('/swipe');
+  }
+
+  async function submitContact(event) {
+    event.preventDefault();
+    const details = contactText.trim();
+    if (!details) {
+      showToast('Tell us what you need help with.', 'error');
+      return;
+    }
+    setSendingContact(true);
+    try {
+      await api.post('/safety/contact', { details });
+      setContactText('');
+      setShowContactSheet(false);
+      showToast('Message sent to BridgeUp support');
+    } catch {
+      showToast('Message could not be sent.', 'error');
+    } finally {
+      setSendingContact(false);
+    }
   }
 
   if (!profile && !['admin', 'staff'].includes(user.role)) {
@@ -197,7 +220,7 @@ export default function Profile() {
         {activeTab === 'Experience' && <ExperienceTab profile={profile} setProfile={setProfile} mode={mode} />}
         {activeTab === 'Mentor' && <MentorshipTab profile={profile} setProfile={setProfile} mode={mode} />}
         {activeTab === 'Activity' && <ActivityTab user={user} />}
-        {activeTab === 'Settings' && <SettingsTab settings={settings} toggleSetting={toggleSetting} onLogoutClick={() => setShowLogoutConfirm(true)} onStartTour={startAppTour} user={user} />}
+        {activeTab === 'Settings' && <SettingsTab settings={settings} toggleSetting={toggleSetting} onLogoutClick={() => setShowLogoutConfirm(true)} onStartTour={startAppTour} onContact={() => setShowContactSheet(true)} user={user} />}
       </section>
 
       {mode === 'edit' && profile && <Button className="mt-5 w-full" onClick={saveProfile}>Save profile changes</Button>}
@@ -254,6 +277,42 @@ export default function Profile() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {showContactSheet && (
+        <div className="fixed inset-0 z-50 grid place-items-end bg-black/40 p-5 backdrop-blur-sm" onClick={() => setShowContactSheet(false)}>
+          <section className="w-full rounded-[30px] bg-white p-5 shadow-soft" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase text-brand-blue">BridgeUp support</p>
+                <h2 className="mt-1 text-2xl font-black">Contact Us</h2>
+              </div>
+              <button onClick={() => setShowContactSheet(false)} className="grid h-10 w-10 place-items-center rounded-full bg-brand-cream text-brand-muted" aria-label="Close contact form">
+                <X size={18} />
+              </button>
+            </div>
+            <form onSubmit={submitContact} className="mt-4">
+              <textarea
+                className="min-h-36 w-full resize-none rounded-[22px] bg-brand-cream p-4 text-sm font-semibold leading-6 outline-brand-blue"
+                placeholder="Tell us what happened or what you need help with..."
+                value={contactText}
+                onChange={(event) => setContactText(event.target.value)}
+                maxLength={1200}
+              />
+              <div className="mt-2 flex items-center justify-between text-xs font-bold text-brand-muted">
+                <span>Support will review your message in-app.</span>
+                <span>{contactText.length}/1200</span>
+              </div>
+              <button
+                disabled={sendingContact || !contactText.trim()}
+                className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-blue text-sm font-black text-white disabled:bg-brand-cream disabled:text-brand-muted"
+              >
+                <Send size={17} />
+                {sendingContact ? 'Sending...' : 'Send Message'}
+              </button>
+            </form>
+          </section>
         </div>
       )}
     </AppShell>
@@ -341,7 +400,7 @@ function ActivityTab({ user }) {
   );
 }
 
-function SettingsTab({ settings, toggleSetting, onLogoutClick, onStartTour, user }) {
+function SettingsTab({ settings, toggleSetting, onLogoutClick, onStartTour, onContact, user }) {
   return (
     <>
       <Card title="Accessibility & Notifications">
@@ -360,14 +419,18 @@ function SettingsTab({ settings, toggleSetting, onLogoutClick, onStartTour, user
         <InfoRow icon={Languages} label="Language" value={settings?.language || 'English'} />
       </Card>
 
-      {['learner', 'mentor'].includes(user.role) && (
-        <Card title="Help">
+      <Card title="Help">
+        <button onClick={onContact} className={`${['learner', 'mentor'].includes(user.role) ? 'mb-2' : ''} flex w-full items-center justify-between rounded-2xl bg-brand-cream p-4 text-left font-black text-brand-text`}>
+          <span className="flex items-center gap-2"><MessageCircle size={18} className="text-brand-blue" /> Contact Us</span>
+          <span className="rounded-full bg-white px-3 py-1 text-xs text-brand-blue">Message</span>
+        </button>
+        {['learner', 'mentor'].includes(user.role) && (
           <button onClick={onStartTour} className="flex w-full items-center justify-between rounded-2xl bg-brand-blue/10 p-4 text-left font-black text-brand-blue">
             <span className="flex items-center gap-2"><HelpCircle size={18} /> App Tour</span>
             <span className="rounded-full bg-white px-3 py-1 text-xs">Restart</span>
           </button>
-        </Card>
-      )}
+        )}
+      </Card>
 
       {['admin', 'staff'].includes(user.role) && (
         <Card title={`${user.role === 'admin' ? 'Admin' : 'Staff'} Controls`}>
