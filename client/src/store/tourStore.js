@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 export const TOUR_MENTOR_ID = 'tour-sarah-tan';
+export const TOUR_LEARNER_ID = 'tour-amir-lee';
 export const TOUR_MATCH_ID = 'tour-sarah-match';
 
 export const tourMentor = {
@@ -28,28 +29,64 @@ export const tourMentor = {
   onboarding: true
 };
 
-export const tourMessages = [
+export const tourLearner = {
+  user: { id: TOUR_LEARNER_ID, name: 'Amir Lee', role: 'learner' },
+  profile: {
+    userId: TOUR_LEARNER_ID,
+    name: 'Amir Lee',
+    age: 18,
+    photo: '',
+    profession: 'Pre-university learner',
+    bio: 'Amir is exploring career paths, preparing for interviews, and looking for practical guidance from experienced mentors.',
+    industries: ['Technology', 'Career Guidance'],
+    skills: ['Communication', 'Portfolio Building', 'Interview Practice'],
+    topics: ['Career Planning', 'University Applications'],
+    languages: ['English'],
+    availability: ['Evenings'],
+    yearsExperience: 0,
+    mentorshipStyle: 'Curious and goal-oriented'
+  },
+  compatibility: {
+    score: 95,
+    explanation: 'You both align on career guidance, interview preparation, and practical learning goals.'
+  },
+  requestStatus: 'none',
+  onboarding: true
+};
+
+export function tourCandidateFor(role) {
+  return role === 'mentor' ? tourLearner : tourMentor;
+}
+
+export function tourPeerIdFor(role) {
+  return tourCandidateFor(role).user.id;
+}
+
+export function tourMessagesFor(role) {
+  const peer = tourCandidateFor(role);
+  return [
   {
-    id: 'tour-msg-sarah',
-    senderId: TOUR_MENTOR_ID,
-    body: 'Hi! Happy to connect :)',
+    id: 'tour-msg-peer',
+    senderId: peer.user.id,
+    body: role === 'mentor' ? 'Hi! Thanks for connecting with me :)' : 'Hi! Happy to connect :)',
     deliveredAt: new Date().toISOString(),
     createdAt: new Date(Date.now() - 60000).toISOString(),
     readAt: new Date().toISOString(),
-    sender: tourMentor.user,
-    senderProfile: tourMentor.profile
+    sender: peer.user,
+    senderProfile: peer.profile
   },
   {
     id: 'tour-msg-you',
     senderId: 'current-user',
-    body: 'Looking forward to learning from you!',
+    body: role === 'mentor' ? 'Happy to help you think through your goals!' : 'Looking forward to learning from you!',
     deliveredAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     readAt: new Date().toISOString(),
     sender: null,
     senderProfile: null
   }
-];
+  ];
+}
 
 function keyFor(userId) {
   return `bridgeup_app_tour_complete_${userId}`;

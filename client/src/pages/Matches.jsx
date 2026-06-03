@@ -4,14 +4,17 @@ import { Link } from 'react-router-dom';
 import { MessageCircle } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { api } from '../api/client';
-import { TOUR_MATCH_ID, tourMentor, useTourStore } from '../store/tourStore';
+import { useAuthStore } from '../store/authStore';
+import { TOUR_MATCH_ID, tourCandidateFor, useTourStore } from '../store/tourStore';
 
 export default function Matches() {
   const [matches, setMatches] = useState([]);
+  const user = useAuthStore((state) => state.user);
   const tourActive = useTourStore((state) => state.active);
   const tourStep = useTourStore((state) => state.step);
   const setTourStep = useTourStore((state) => state.setStep);
   const inMatchesTour = tourActive && tourStep === 3;
+  const tourCandidate = tourCandidateFor(user?.role);
 
   useEffect(() => {
     api.get('/matching/matches').then(({ data }) => setMatches(data.matches));
@@ -21,8 +24,10 @@ export default function Matches() {
     ? [{
         id: TOUR_MATCH_ID,
         score: 95,
-        explanation: 'Sarah is a strong fit for career guidance, interview preparation, and practical goal setting.',
-        other: tourMentor.user,
+        explanation: user?.role === 'mentor'
+          ? 'Amir is a strong fit for your guidance around interviews, career planning, and practical next steps.'
+          : 'Sarah is a strong fit for career guidance, interview preparation, and practical goal setting.',
+        other: tourCandidate.user,
         onboarding: true
       }, ...matches]
     : matches;

@@ -7,10 +7,12 @@ import Button from '../components/Button';
 import ProfileCard from '../components/ProfileCard';
 import { api } from '../api/client';
 import { useToastStore } from '../store/toastStore';
-import { tourMentor, useTourStore } from '../store/tourStore';
+import { useAuthStore } from '../store/authStore';
+import { tourCandidateFor, useTourStore } from '../store/tourStore';
 
 export default function Swipe() {
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
   const [candidates, setCandidates] = useState([]);
   const [match, setMatch] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -22,6 +24,7 @@ export default function Swipe() {
   const markSwipeTried = useTourStore((state) => state.markSwipeTried);
   const setTourStep = useTourStore((state) => state.setStep);
   const inSwipeTour = tourActive && tourStep === 0;
+  const tourCandidate = tourCandidateFor(user?.role);
 
   async function load() {
     try {
@@ -115,12 +118,12 @@ export default function Swipe() {
           </div>
         </div>
       )}
-      {loading ? (
+      {loading && !inSwipeTour ? (
         <div className="rounded-[32px] bg-white/80 p-8 text-center shadow-soft">
           <h2 className="text-2xl font-black">Loading cards</h2>
           <p className="mt-2 text-brand-muted">Getting your latest recommendations.</p>
         </div>
-      ) : loadError ? (
+      ) : loadError && !inSwipeTour ? (
         <div className="rounded-[32px] bg-white/80 p-8 text-center shadow-soft">
           <h2 className="text-2xl font-black">Could not load cards</h2>
           <p className="mt-2 text-brand-muted">{loadError}</p>
@@ -129,7 +132,7 @@ export default function Swipe() {
       ) : (inSwipeTour || candidates[0]) ? (
         <div className="relative" data-tour="swipe-card">
           {!inSwipeTour && candidates[1] && <div className="absolute inset-x-6 top-4 h-[calc(100vh-210px)] rounded-[34px] bg-white/70 shadow-soft" />}
-          <ProfileCard candidate={inSwipeTour ? tourMentor : candidates[0]} onSwipe={swipe} onSave={save} onReport={report} />
+          <ProfileCard candidate={inSwipeTour ? tourCandidate : candidates[0]} onSwipe={swipe} onSave={save} onReport={report} />
         </div>
       ) : (
         <div className="rounded-[32px] bg-white/80 p-8 text-center shadow-soft">

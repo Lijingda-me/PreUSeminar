@@ -360,7 +360,7 @@ function SettingsTab({ settings, toggleSetting, onLogoutClick, onStartTour, user
         <InfoRow icon={Languages} label="Language" value={settings?.language || 'English'} />
       </Card>
 
-      {user.role === 'learner' && (
+      {['learner', 'mentor'].includes(user.role) && (
         <Card title="Help">
           <button onClick={onStartTour} className="flex w-full items-center justify-between rounded-2xl bg-brand-blue/10 p-4 text-left font-black text-brand-blue">
             <span className="flex items-center gap-2"><HelpCircle size={18} /> App Tour</span>

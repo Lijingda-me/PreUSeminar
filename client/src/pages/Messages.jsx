@@ -7,7 +7,7 @@ import Avatar from '../components/Avatar';
 import { api } from '../api/client';
 import { useAuthStore } from '../store/authStore';
 import { useToastStore } from '../store/toastStore';
-import { TOUR_MATCH_ID, tourMentor, tourMessages, useTourStore } from '../store/tourStore';
+import { TOUR_MATCH_ID, tourCandidateFor, tourMessagesFor, useTourStore } from '../store/tourStore';
 
 const quickEmojis = ['🙂', '😊', '👍', '❤️', '🙏', '🎉', '💡', '✨'];
 
@@ -20,6 +20,7 @@ export default function Messages() {
   const tourStep = useTourStore((state) => state.step);
   const tourPhase = useTourStore((state) => state.phase);
   const isTourConversation = tourActive && tourStep === 4 && matchId === TOUR_MATCH_ID;
+  const tourCandidate = tourCandidateFor(user?.role);
   const [matches, setMatches] = useState([]);
   const [groupChats, setGroupChats] = useState([]);
   const [connected, setConnected] = useState([]);
@@ -92,18 +93,18 @@ export default function Messages() {
 
   const refreshActiveChat = useCallback(async () => {
     if (isTourConversation) {
-      const demoMessages = tourMessages.map((message) => message.id === 'tour-msg-you'
+      const demoMessages = tourMessagesFor(user?.role).map((message) => message.id === 'tour-msg-you'
         ? { ...message, senderId: user.id, sender: user }
         : message);
       setMessages(demoMessages);
       setCallLogs([]);
       setParticipants([
         { ...user, photo: null },
-        { ...tourMentor.user, profile: tourMentor.profile, photo: null }
+        { ...tourCandidate.user, profile: tourCandidate.profile, photo: null }
       ]);
       setActiveChat({
         type: 'match',
-        title: 'Sarah Tan',
+        title: tourCandidate.user.name,
         about: '95% compatibility'
       });
       return;

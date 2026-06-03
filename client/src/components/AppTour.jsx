@@ -4,14 +4,18 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { TOUR_MATCH_ID, TOUR_MENTOR_ID, useTourStore } from '../store/tourStore';
+import { TOUR_MATCH_ID, tourCandidateFor, tourPeerIdFor, useTourStore } from '../store/tourStore';
 
-const steps = [
+function stepsFor(role) {
+  const peer = tourCandidateFor(role);
+  const peerKind = role === 'mentor' ? 'learners' : 'mentors';
+  const peerName = peer.user.name;
+  return [
   {
     route: '/swipe',
     selector: '[data-tour="swipe-card"]',
     title: 'Discover Opportunities',
-    body: 'BridgeUp recommends mentors based on your interests, goals, availability, and preferences. Swipe left to skip, swipe right to send a connection request, or view the full profile first.',
+    body: `BridgeUp recommends ${peerKind} based on your interests, goals, availability, and preferences. Swipe left to skip, swipe right to send a connection request, or view the full profile first.`,
     detail: "Compatibility Score shows how closely your goals align. Why You're Matched explains the shared interests behind each recommendation.",
     button: 'Try It Yourself'
   },
@@ -19,23 +23,25 @@ const steps = [
     route: '/search',
     selector: '[data-tour="search-page"]',
     title: 'Explore Beyond Swiping',
-    body: 'Prefer searching instead? Search helps you find specific mentors, discover community groups, and browse workshops or events.',
-    detail: 'Tap View Profile on Sarah Tan to learn more about a mentor before connecting.',
-    button: 'View Sarah Profile'
+    body: `Prefer searching instead? Search helps you find specific ${peerKind}, discover community groups, and browse workshops or events.`,
+    detail: `Tap View Profile on ${peerName} to learn more before connecting.`,
+    button: `View ${peerName.split(' ')[0]} Profile`
   },
   {
-    route: `/profiles/${TOUR_MENTOR_ID}`,
+    route: `/profiles/${peer.user.id}`,
     selector: '[data-tour="profile-connect"]',
     title: 'Send a Connection Request',
-    body: "Found someone you'd like to learn from? Send them a connection request. If they're interested too, you'll become a match and unlock messaging.",
-    detail: 'Tap Connect to send Sarah a temporary request for this tour.',
+    body: role === 'mentor'
+      ? "Found a learner you'd like to guide? Send them a connection request. If they're interested too, you'll become a match and unlock messaging."
+      : "Found someone you'd like to learn from? Send them a connection request. If they're interested too, you'll become a match and unlock messaging.",
+    detail: `Tap Connect to send ${peerName} a temporary request for this tour.`,
     button: 'Connect'
   },
   {
     route: '/matches',
     selector: '[data-tour="match-card"]',
     title: "You've Matched",
-    body: 'When both you and a mentor express interest, a match is created. Matched mentors appear here so you can start conversations.',
+    body: `When both you and ${role === 'mentor' ? 'a learner' : 'a mentor'} express interest, a match is created. Matched ${peerKind} appear here so you can start conversations.`,
     detail: 'Tap the chat button to begin the conversation.',
     button: 'Chat'
   },
@@ -43,11 +49,14 @@ const steps = [
     route: `/messages/${TOUR_MATCH_ID}`,
     selector: '[data-tour="conversation-area"]',
     title: 'Start Meaningful Conversations',
-    body: 'Use messaging to ask questions, seek advice, discuss goals, and learn from experienced mentors. Mentorship begins with a conversation.',
+    body: role === 'mentor'
+      ? 'Use messaging to understand goals, offer advice, share experience, and build trust with learners. Mentorship begins with a conversation.'
+      : 'Use messaging to ask questions, seek advice, discuss goals, and learn from experienced mentors. Mentorship begins with a conversation.',
     detail: "After this, you'll be ready to explore BridgeUp on your own.",
     button: 'Next'
   }
-];
+  ];
+}
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -59,9 +68,12 @@ export default function AppTour() {
   const navigate = useNavigate();
   const { active, step, phase, swipeTried, start, skip, complete, setStep } = useTourStore();
   const [rect, setRect] = useState(null);
+  const role = user?.role;
+  const peerId = tourPeerIdFor(role);
+  const steps = useMemo(() => stepsFor(role), [role]);
 
   useEffect(() => {
-    if (user?.role === 'learner' && user.onboarded) start(user.id);
+    if (['learner', 'mentor'].includes(user?.role) && user.onboarded) start(user.id);
   }, [start, user?.id, user?.onboarded, user?.role]);
 
   const current = useMemo(() => {
@@ -70,13 +82,15 @@ export default function AppTour() {
         route: `/messages/${TOUR_MATCH_ID}`,
         selector: '[data-tour="bottom-nav"]',
         title: "You're Ready",
-        body: 'Discover mentors through swiping, find opportunities through search, connect with people who share your goals, and grow through meaningful conversations.',
+        body: role === 'mentor'
+          ? 'Discover learners through swiping, find opportunities through search, connect with people who value your guidance, and grow through meaningful conversations.'
+          : 'Discover mentors through swiping, find opportunities through search, connect with people who share your goals, and grow through meaningful conversations.',
         detail: '',
         button: 'Start Exploring'
       };
     }
     return steps[step] || steps[0];
-  }, [phase, step]);
+  }, [phase, role, step, steps]);
 
   useEffect(() => {
     if (!active) return;
@@ -104,7 +118,7 @@ export default function AppTour() {
     };
   }, [active, current.selector, location.pathname]);
 
-  if (!active || user?.role !== 'learner') return null;
+  if (!active || !['learner', 'mentor'].includes(user?.role)) return null;
 
   const spotlight = rect || {
     top: 130,
@@ -114,9 +128,25 @@ export default function AppTour() {
   };
   const cardWidth = Math.min(360, window.innerWidth - 32);
   const cardLeft = clamp(spotlight.left + spotlight.width / 2 - cardWidth / 2, 16, window.innerWidth - cardWidth - 16);
-  const below = spotlight.top + spotlight.height + 18;
-  const cardTop = below + 260 < window.innerHeight ? below : Math.max(18, spotlight.top - 278);
+  const cardHeight = Math.min(390, window.innerHeight - 32);
+  const targetCenter = spotlight.top + spotlight.height / 2;
+  const cardTop = targetCenter < window.innerHeight / 2 ? window.innerHeight - cardHeight - 16 : 16;
+  const skipLeft = clamp(spotlight.left + 12, 16, window.innerWidth - 118);
+  const connectLeft = clamp(spotlight.left + spotlight.width - 140, 16, window.innerWidth - 156);
   const progress = phase === 'ready' ? 5 : step + 1;
+
+  function cancelTour() {
+    complete(user.id);
+    if (step === 2) {
+      navigate('/search');
+      return;
+    }
+    if (step === 4 || phase === 'ready') {
+      navigate('/messages');
+      return;
+    }
+    navigate(current.route === `/profiles/${peerId}` ? '/search' : location.pathname);
+  }
 
   function previous() {
     if (phase === 'ready') {
@@ -140,7 +170,7 @@ export default function AppTour() {
       return;
     }
     if (step === 1) {
-      navigate(`/profiles/${TOUR_MENTOR_ID}`, { state: { onboardingTour: true } });
+      navigate(`/profiles/${peerId}`, { state: { onboardingTour: true } });
       setStep(2);
       return;
     }
@@ -178,7 +208,8 @@ export default function AppTour() {
               initial={{ opacity: 0, x: 0 }}
               animate={{ opacity: [0, 1, 1, 0], x: [0, -42, -42, 0] }}
               transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 0.5 }}
-              className="absolute left-8 top-1/2 rounded-full bg-white px-4 py-2 text-sm font-black text-brand-coral shadow-soft"
+              className="absolute rounded-full bg-white px-4 py-2 text-sm font-black text-brand-coral shadow-soft"
+              style={{ left: skipLeft, top: clamp(spotlight.top + spotlight.height / 2 - 18, 16, window.innerHeight - 52) }}
             >
               X Skip
             </motion.div>
@@ -186,7 +217,8 @@ export default function AppTour() {
               initial={{ opacity: 0, x: 0 }}
               animate={{ opacity: [0, 1, 1, 0], x: [0, 42, 42, 0] }}
               transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 0.5, delay: 1.25 }}
-              className="absolute right-8 top-1/2 rounded-full bg-white px-4 py-2 text-sm font-black text-brand-blue shadow-soft"
+              className="absolute rounded-full bg-white px-4 py-2 text-sm font-black text-brand-blue shadow-soft"
+              style={{ left: connectLeft, top: clamp(spotlight.top + spotlight.height / 2 - 18, 16, window.innerHeight - 52) }}
             >
               Heart Connect
             </motion.div>
@@ -197,8 +229,8 @@ export default function AppTour() {
           initial={{ opacity: 0, y: 18, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 12, scale: 0.98 }}
-          className="pointer-events-auto fixed rounded-[28px] border border-white/25 bg-white/92 p-4 text-brand-text shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-xl"
-          style={{ top: cardTop, left: cardLeft, width: cardWidth }}
+          className="sleek-scrollbar pointer-events-auto fixed overflow-y-auto rounded-[28px] border border-white/70 bg-white/98 p-4 text-brand-text shadow-[0_24px_80px_rgba(0,0,0,0.32)] backdrop-blur-xl"
+          style={{ top: cardTop, left: cardLeft, width: cardWidth, maxHeight: cardHeight }}
         >
           <div className="mb-3 flex items-center justify-between">
             <div className="flex gap-1.5">
@@ -206,13 +238,13 @@ export default function AppTour() {
                 <span key={item} className={`h-2 w-8 rounded-full ${item <= progress ? 'bg-brand-blue' : 'bg-slate-200'}`} />
               ))}
             </div>
-            <button onClick={() => skip(user.id)} className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-brand-muted" aria-label="Skip tour">
+            <button onClick={cancelTour} className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-brand-muted" aria-label="Skip tour">
               <X size={17} />
             </button>
           </div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-brand-blue">Step {progress} of 5</p>
           <h2 className="mt-1 text-[24px] font-black leading-tight">{current.title}</h2>
-          <p className="mt-2 text-sm font-semibold leading-6 text-brand-muted">{current.body}</p>
+          <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">{current.body}</p>
           {current.detail && <p className="mt-3 rounded-[18px] bg-brand-blue/10 p-3 text-xs font-bold leading-5 text-brand-blue">{current.detail}</p>}
           {step === 0 && !swipeTried && phase !== 'ready' && (
             <p className="mt-3 text-xs font-black text-brand-coral">Try a left or right swipe on the card to continue.</p>
@@ -235,7 +267,7 @@ export default function AppTour() {
               {current.button}
             </button>
           </div>
-          <button onClick={() => skip(user.id)} className="mt-3 h-10 w-full rounded-full text-xs font-black text-brand-muted">
+          <button onClick={cancelTour} className="mt-3 h-10 w-full rounded-full text-xs font-black text-brand-muted">
             Skip Tour
           </button>
         </motion.section>

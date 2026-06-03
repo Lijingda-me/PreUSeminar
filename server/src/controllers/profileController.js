@@ -26,7 +26,32 @@ export async function getProfile(req, res) {
   if (['admin', 'staff'].includes(user.role)) return res.json({ user: publicUser(user), profile: null });
   const collection = user.role === 'mentor' ? 'mentorProfiles' : 'learnerProfiles';
   const profile = await findOne(collection, (item) => item.userId === userId);
-  res.json({ user: publicUser(user), profile });
+  let requestStatus = 'none';
+  if (user.id === req.user.id) {
+    requestStatus = 'self';
+  } else if (req.user.role === user.role || ['admin', 'staff'].includes(req.user.role)) {
+    requestStatus = 'unavailable';
+  } else {
+    const [matches, requests] = await Promise.all([
+      list('matches'),
+      list('matchRequests')
+    ]);
+    const connected = matches.some((match) =>
+      match.status === 'matched'
+      && [match.learnerId, match.mentorId].includes(req.user.id)
+      && [match.learnerId, match.mentorId].includes(user.id)
+    );
+    const pending = requests.some((request) =>
+      request.action === 'connect'
+      && request.status === 'pending'
+      && (
+        (request.fromUserId === req.user.id && request.toUserId === user.id)
+        || (request.fromUserId === user.id && request.toUserId === req.user.id)
+      )
+    );
+    requestStatus = connected ? 'connected' : pending ? 'pending' : 'none';
+  }
+  res.json({ user: publicUser(user), profile, requestStatus });
 }
 
 export async function updateProfile(req, res) {

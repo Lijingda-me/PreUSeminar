@@ -6,7 +6,8 @@ import AppShell from '../components/AppShell';
 import Avatar from '../components/Avatar';
 import { api } from '../api/client';
 import { useToastStore } from '../store/toastStore';
-import { tourMentor, useTourStore } from '../store/tourStore';
+import { useAuthStore } from '../store/authStore';
+import { tourCandidateFor, useTourStore } from '../store/tourStore';
 
 const popularSearches = ['Finance', 'Career Guidance', 'Leadership', 'Interview Preparation', 'Technology', 'Entrepreneurship'];
 const filters = ['All', 'Mentors', 'Workshops', 'Groups', 'Events', 'Saved'];
@@ -36,10 +37,12 @@ export default function SearchPage() {
   const [advanced, setAdvanced] = useState({ industry: '', language: '', availability: '', style: '', minimumCompatibility: 0 });
   const [groupForm, setGroupForm] = useState({ name: '', topic: '', description: '' });
   const showToast = useToastStore((state) => state.showToast);
+  const user = useAuthStore((state) => state.user);
   const tourActive = useTourStore((state) => state.active);
   const tourStep = useTourStore((state) => state.step);
   const setTourStep = useTourStore((state) => state.setStep);
   const inSearchTour = tourActive && tourStep === 1;
+  const tourCandidate = tourCandidateFor(user?.role);
 
   const suggestions = useMemo(() => suggestionsFor(q), [q]);
 
@@ -138,8 +141,9 @@ export default function SearchPage() {
 
   const baseResults = activeFilter === 'Saved' ? results.filter((item) => savedIds.includes(item.user.id)) : results;
   const visibleResults = inSearchTour
-    ? [tourMentor, ...baseResults.filter((item) => item.user.id !== tourMentor.user.id)]
+    ? [tourCandidate, ...baseResults.filter((item) => item.user.id !== tourCandidate.user.id)]
     : baseResults;
+  const searchReady = inSearchTour || (!loading && !loadError);
 
   return (
     <AppShell>
@@ -176,8 +180,8 @@ export default function SearchPage() {
         )}
       </section>
 
-      {loading && <div className="mt-5 rounded-[28px] bg-white p-6 text-center font-semibold text-brand-muted shadow-soft">Loading results...</div>}
-      {loadError && !loading && (
+      {loading && !inSearchTour && <div className="mt-5 rounded-[28px] bg-white p-6 text-center font-semibold text-brand-muted shadow-soft">Loading results...</div>}
+      {loadError && !loading && !inSearchTour && (
         <div className="mt-5 rounded-[28px] bg-white p-6 text-center shadow-soft">
           <h2 className="text-xl font-black">Results unavailable</h2>
           <p className="mt-2 text-sm font-semibold text-brand-muted">{loadError}</p>
@@ -185,7 +189,7 @@ export default function SearchPage() {
         </div>
       )}
 
-      {!loading && !loadError && (activeFilter === 'All' || activeFilter === 'Mentors' || activeFilter === 'Saved') && (
+      {searchReady && (activeFilter === 'All' || activeFilter === 'Mentors' || activeFilter === 'Saved') && (
         <section className="mt-6">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-xl font-black">{activeFilter === 'Saved' ? 'Saved mentors' : 'Mentors'}</h2>
@@ -209,7 +213,7 @@ export default function SearchPage() {
         </section>
       )}
 
-      {!loading && !loadError && (activeFilter === 'All' || activeFilter === 'Groups') && (
+      {searchReady && (activeFilter === 'All' || activeFilter === 'Groups') && (
         <section className="mt-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-black">Community groups</h2>
@@ -227,7 +231,7 @@ export default function SearchPage() {
         </section>
       )}
 
-      {!loading && !loadError && (activeFilter === 'All' || activeFilter === 'Workshops' || activeFilter === 'Events') && (
+      {searchReady && (activeFilter === 'All' || activeFilter === 'Workshops' || activeFilter === 'Events') && (
         <section className="mt-6">
           <h2 className="text-xl font-black">Workshops & Events</h2>
           <div className="mt-3 grid gap-3">

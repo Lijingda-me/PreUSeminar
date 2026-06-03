@@ -1,33 +1,42 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Award, Briefcase, CalendarDays, ChevronLeft, Languages, Star } from 'lucide-react';
+import { Award, Briefcase, CalendarDays, CheckCircle2, ChevronLeft, Languages, Send, Star } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import Avatar from '../components/Avatar';
 import { api } from '../api/client';
+import { useAuthStore } from '../store/authStore';
 import { useToastStore } from '../store/toastStore';
-import { TOUR_MENTOR_ID, tourMentor, useTourStore } from '../store/tourStore';
+import { tourCandidateFor, tourPeerIdFor, useTourStore } from '../store/tourStore';
 
 export default function PublicProfile() {
   const { userId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const currentUser = useAuthStore((state) => state.user);
   const showToast = useToastStore((state) => state.showToast);
   const tourActive = useTourStore((state) => state.active);
   const tourStep = useTourStore((state) => state.step);
   const setTourStep = useTourStore((state) => state.setStep);
-  const isTourProfile = tourActive && tourStep === 2 && userId === TOUR_MENTOR_ID;
-  const [data, setData] = useState(userId === TOUR_MENTOR_ID ? tourMentor : location.state?.candidate || null);
+  const tourCandidate = tourCandidateFor(currentUser?.role);
+  const tourPeerId = tourPeerIdFor(currentUser?.role);
+  const isTourProfile = tourActive && tourStep === 2 && userId === tourPeerId;
+  const [data, setData] = useState(userId === tourPeerId ? tourCandidate : location.state?.candidate || null);
+  const [requestStatus, setRequestStatus] = useState(location.state?.candidate?.requestStatus || 'none');
+  const [connecting, setConnecting] = useState(false);
 
   useEffect(() => {
-    if (userId === TOUR_MENTOR_ID) {
-      setData(tourMentor);
+    if (userId === tourPeerId) {
+      setData(tourCandidate);
       return;
     }
     if (!data) {
-      api.get(`/profiles/${userId}`).then(({ data }) => setData({ ...data, compatibility: { score: 0, explanation: '' } }));
+      api.get(`/profiles/${userId}`).then(({ data }) => {
+        setData({ ...data, compatibility: { score: 0, explanation: '' } });
+        setRequestStatus(data.requestStatus || 'none');
+      });
     }
-  }, [userId]);
+  }, [tourCandidate, tourPeerId, userId]);
 
   function sendTourRequest() {
     showToast('Connection Request Sent');
@@ -35,10 +44,27 @@ export default function PublicProfile() {
     window.setTimeout(() => navigate('/matches'), 650);
   }
 
+  async function connect() {
+    if (!data?.user || ['pending', 'connected', 'self', 'unavailable'].includes(requestStatus)) return;
+    setConnecting(true);
+    try {
+      await api.post('/matching/swipe', { targetUserId: data.user.id, action: 'connect' });
+      setRequestStatus('pending');
+      showToast('Request sent');
+    } catch {
+      showToast('Request could not be sent.', 'error');
+    } finally {
+      setConnecting(false);
+    }
+  }
+
   if (!data) return <AppShell><div className="ios-card p-6">Loading profile...</div></AppShell>;
 
   const { user, profile } = data;
   const skills = [...(profile.skills || []), ...(profile.industries || [])];
+  const showConnectButton = !isTourProfile && !['self', 'unavailable'].includes(requestStatus);
+  const connected = requestStatus === 'connected';
+  const requested = requestStatus === 'pending';
 
   return (
     <AppShell>
@@ -60,6 +86,22 @@ export default function PublicProfile() {
               className="h-14 w-full rounded-full bg-brand-blue text-base font-black text-white shadow-soft"
             >
               Connect
+            </button>
+          )}
+          {showConnectButton && (
+            <button
+              onClick={connect}
+              disabled={connecting || requested || connected}
+              className={`flex h-14 w-full items-center justify-center gap-2 rounded-full text-base font-black shadow-soft ${
+                connected
+                  ? 'bg-brand-green text-white'
+                  : requested
+                    ? 'bg-brand-cream text-brand-muted'
+                    : 'bg-brand-blue text-white'
+              }`}
+            >
+              {connected ? <CheckCircle2 size={19} /> : <Send size={18} />}
+              {connecting ? 'Sending...' : connected ? 'Connected' : requested ? 'Requested' : 'Connect'}
             </button>
           )}
           <Section title="About">
