@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export const TOUR_MENTOR_ID = 'tour-sarah-tan';
-export const TOUR_LEARNER_ID = 'tour-amir-lee';
+export const TOUR_LEARNER_ID = 'tour-peter-lee';
 export const TOUR_MATCH_ID = 'tour-sarah-match';
 
 export const tourMentor = {
@@ -30,14 +30,14 @@ export const tourMentor = {
 };
 
 export const tourLearner = {
-  user: { id: TOUR_LEARNER_ID, name: 'Amir Lee', role: 'learner' },
+  user: { id: TOUR_LEARNER_ID, name: 'Peter Lee', role: 'learner' },
   profile: {
     userId: TOUR_LEARNER_ID,
-    name: 'Amir Lee',
+    name: 'Peter Lee',
     age: 18,
     photo: '',
     profession: 'Pre-university learner',
-    bio: 'Amir is exploring career paths, preparing for interviews, and looking for practical guidance from experienced mentors.',
+    bio: 'Peter is exploring career paths, preparing for interviews, and looking for practical guidance from experienced mentors.',
     industries: ['Technology', 'Career Guidance'],
     skills: ['Communication', 'Portfolio Building', 'Interview Practice'],
     topics: ['Career Planning', 'University Applications'],

@@ -25,7 +25,7 @@ export default function Matches() {
         id: TOUR_MATCH_ID,
         score: 95,
         explanation: user?.role === 'mentor'
-          ? 'Amir is a strong fit for your guidance around interviews, career planning, and practical next steps.'
+          ? 'Peter is a strong fit for your guidance around interviews, career planning, and practical next steps.'
           : 'Sarah is a strong fit for career guidance, interview preparation, and practical goal setting.',
         other: tourCandidate.user,
         onboarding: true
