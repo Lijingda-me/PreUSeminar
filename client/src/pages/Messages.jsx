@@ -128,10 +128,10 @@ export default function Messages() {
       if (data.unreadMessageIds?.length) setUnreadHighlightIds(data.unreadMessageIds);
       setCallLogs(data.calls || []);
       setParticipants(data.participants || []);
-      const about = data.chat?.about || 'A private group chat for connected BridgeUp members.';
+      const about = data.chat?.about || 'A private group chat for connected WeMentor members.';
       setActiveChat({
         type: 'group',
-        title: data.chat?.name || 'BridgeUp group chat',
+        title: data.chat?.name || 'WeMentor group chat',
         about,
         ownerId: data.chat?.ownerId,
         moderators: data.chat?.moderators || []
@@ -589,10 +589,10 @@ export default function Messages() {
     const { data } = await api.get(`/messages/group-chats/${groupChatId}`);
     setMessages(data.messages);
     setParticipants(data.participants || []);
-    const about = data.chat?.about || 'A private group chat for connected BridgeUp members.';
+    const about = data.chat?.about || 'A private group chat for connected WeMentor members.';
     setActiveChat({
       type: 'group',
-      title: data.chat?.name || 'BridgeUp group chat',
+      title: data.chat?.name || 'WeMentor group chat',
       about,
       ownerId: data.chat?.ownerId,
       moderators: data.chat?.moderators || []
@@ -605,7 +605,7 @@ export default function Messages() {
   }
 
   function senderName(message) {
-    return message.sender?.name || participantFor(message)?.name || (message.senderId === user.id ? user.name : 'BridgeUp member');
+    return message.sender?.name || participantFor(message)?.name || (message.senderId === user.id ? user.name : 'WeMentor member');
   }
 
   function senderPhoto(message) {
@@ -1177,9 +1177,9 @@ function IncomingCallSheet({ call, participants, onAccept, onDecline }) {
   return (
     <div className="fixed inset-y-0 left-1/2 z-[70] grid w-full max-w-md -translate-x-1/2 place-items-end bg-black/50 p-5 backdrop-blur-sm">
       <section className="w-full rounded-[34px] bg-white p-6 text-center shadow-soft">
-        <Avatar name={caller?.name || 'BridgeUp member'} src={caller?.photo || caller?.profile?.photo} className="mx-auto h-24 w-24 text-3xl" />
+        <Avatar name={caller?.name || 'WeMentor member'} src={caller?.photo || caller?.profile?.photo} className="mx-auto h-24 w-24 text-3xl" />
         <p className="mt-4 text-sm font-black uppercase text-brand-blue">Incoming {call.callType} call</p>
-        <h2 className="mt-1 text-2xl font-black">{caller?.name || 'BridgeUp member'}</h2>
+        <h2 className="mt-1 text-2xl font-black">{caller?.name || 'WeMentor member'}</h2>
         <p className="mt-2 text-sm font-semibold text-brand-muted">Ringing...</p>
         <div className="mt-6 grid grid-cols-2 gap-3">
           <button onClick={onDecline} className="h-14 rounded-full bg-brand-coral text-sm font-black text-white">Decline</button>
@@ -1223,8 +1223,8 @@ function CallOverlay({ call, status, seconds, micMuted, cameraOff, speakerOn, lo
         ) : (
           <div className="grid h-full place-items-center px-6 text-center">
             <div>
-              <Avatar name={other?.name || 'BridgeUp member'} src={other?.photo || other?.profile?.photo} className="mx-auto h-32 w-32 text-5xl" />
-              <h2 className="mt-5 text-3xl font-black">{other?.name || 'BridgeUp call'}</h2>
+              <Avatar name={other?.name || 'WeMentor member'} src={other?.photo || other?.profile?.photo} className="mx-auto h-32 w-32 text-5xl" />
+              <h2 className="mt-5 text-3xl font-black">{other?.name || 'WeMentor call'}</h2>
               <p className="mt-2 text-sm font-bold uppercase tracking-[0.16em] text-white/65">{status || 'Calling'}</p>
               <p className="mt-3 text-xl font-black">{connected ? formatDuration(seconds) : 'Ringing...'}</p>
             </div>
@@ -1233,7 +1233,7 @@ function CallOverlay({ call, status, seconds, micMuted, cameraOff, speakerOn, lo
         <audio ref={remoteAudioRef} autoPlay muted={!speakerOn} />
         {call.callType === 'video' && (
           <div className="absolute inset-x-0 top-5 px-5">
-            <h2 className="truncate text-2xl font-black drop-shadow">{other?.name || 'BridgeUp call'}</h2>
+            <h2 className="truncate text-2xl font-black drop-shadow">{other?.name || 'WeMentor call'}</h2>
             <p className="text-sm font-bold text-white/80 drop-shadow">{status || 'Calling'} - {connected ? formatDuration(seconds) : 'Ringing...'}</p>
           </div>
         )}

@@ -9,7 +9,7 @@ export default function Landing() {
       <section className="flex flex-1 flex-col justify-end rounded-[36px] bg-[url('https://images.unsplash.com/photo-1516307365426-bea591f05011?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center p-5 shadow-soft">
         <div className="rounded-[28px] bg-brand-text/72 p-5 text-white backdrop-blur">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-2 text-sm font-bold"><Heart size={18} /> Mentorship matching</div>
-          <h1 className="text-4xl font-black leading-tight">BridgeUp</h1>
+          <h1 className="text-4xl font-black leading-tight">WeMentor</h1>
           <p className="mt-3 text-base leading-relaxed text-white/90">Swipe, match, and chat with trusted mentors, retirees, and experienced professionals in Singapore.</p>
         </div>
       </section>

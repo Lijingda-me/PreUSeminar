@@ -121,7 +121,7 @@ export async function adminBanUser(req, res) {
   }
   const banned = await update('users', user.id, {
     status: 'banned',
-    banReason: req.body.reason || 'Violation of BridgeUp community guidelines.',
+    banReason: req.body.reason || 'Violation of WeMentor community guidelines.',
     banDurationDays: req.body.durationDays || 'permanent',
     banUntil,
     bannedBy: req.user.id,

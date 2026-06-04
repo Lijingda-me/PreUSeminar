@@ -127,7 +127,7 @@ export default function Profile() {
       await api.post('/safety/contact', { details });
       setContactText('');
       setShowContactSheet(false);
-      showToast('Message sent to BridgeUp support');
+      showToast('Message sent to WeMentor support');
     } catch {
       showToast('Message could not be sent.', 'error');
     } finally {
@@ -140,7 +140,7 @@ export default function Profile() {
   }
 
   const roleLabel = user.role === 'mentor' ? 'Verified Mentor' : user.role === 'learner' ? 'Learner' : user.role;
-  const industry = profile?.industries?.[0] || 'BridgeUp Community';
+  const industry = profile?.industries?.[0] || 'WeMentor Community';
   const statLabels = user.role === 'mentor'
     ? [{ label: 'Mentees Guided', value: '12' }, { label: 'Sessions Hosted', value: '28' }, { label: 'Success Rate', value: '89%' }]
     : [{ label: 'Mentors Connected', value: '3' }, { label: 'Sessions Attended', value: '8' }, { label: 'Goals Completed', value: '5' }];
@@ -184,7 +184,7 @@ export default function Profile() {
             <p className="text-sm font-semibold text-brand-muted">{industry}</p>
           </div>
 
-          <p className="mx-auto mt-4 max-w-sm text-[15px] font-semibold leading-6 text-brand-muted">{profile?.bio || 'Building meaningful mentorship connections on BridgeUp.'}</p>
+          <p className="mx-auto mt-4 max-w-sm text-[15px] font-semibold leading-6 text-brand-muted">{profile?.bio || 'Building meaningful mentorship connections on WeMentor.'}</p>
 
           <div className="mt-4 grid grid-cols-3 gap-2">
             {statLabels.map((item) => <Stat key={item.label} label={item.label} value={item.value} />)}
@@ -266,7 +266,7 @@ export default function Profile() {
             </div>
             <h2 className="mt-4 text-2xl font-black">Log out?</h2>
             <p className="mt-2 text-sm font-semibold leading-6 text-brand-muted">
-              Are you sure you want to log out of your BridgeUp account?
+              Are you sure you want to log out of your WeMentor account?
             </p>
             <div className="mt-6 grid grid-cols-2 gap-3">
               <button onClick={() => setShowLogoutConfirm(false)} className="h-12 rounded-full bg-brand-cream text-sm font-black text-brand-text">
@@ -285,7 +285,7 @@ export default function Profile() {
           <section className="mx-auto w-full max-w-md rounded-[30px] bg-white p-5 shadow-soft" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-black uppercase text-brand-blue">BridgeUp support</p>
+                <p className="text-xs font-black uppercase text-brand-blue">WeMentor support</p>
                 <h2 className="mt-1 text-2xl font-black">Contact Us</h2>
               </div>
               <button onClick={() => setShowContactSheet(false)} className="grid h-10 w-10 place-items-center rounded-full bg-brand-cream text-brand-muted" aria-label="Close contact form">
@@ -367,7 +367,7 @@ function ExperienceTab({ profile, setProfile, mode }) {
         <InfoRow icon={Award} label="Years of Experience" value={`${profile?.yearsExperience || 0} years`} />
         <InfoRow icon={Sparkles} label="Industries" value={profile?.industries?.join(', ') || 'Not added'} />
         <InfoRow icon={Award} label="Education" value="Professional learning and lived experience" />
-        <InfoRow icon={CheckCircle2} label="Certifications" value={profile?.verified ? 'BridgeUp verified' : 'Not verified yet'} />
+        <InfoRow icon={CheckCircle2} label="Certifications" value={profile?.verified ? 'WeMentor verified' : 'Not verified yet'} />
       </Card>
     </>
   );
@@ -395,7 +395,7 @@ function ActivityTab({ user }) {
   return (
     <Card title="Activity">
       {stats.map((item) => <div key={item} className="mb-2 rounded-2xl bg-brand-cream p-3 font-bold">{item}</div>)}
-      <Card title="Achievements"><ChipList items={['BridgeUp verified', 'Active member', 'Mentorship milestone']} /></Card>
+      <Card title="Achievements"><ChipList items={['WeMentor verified', 'Active member', 'Mentorship milestone']} /></Card>
     </Card>
   );
 }
@@ -413,7 +413,7 @@ function SettingsTab({ settings, toggleSetting, onLogoutClick, onStartTour, onCo
       </Card>
 
       <Card title="Privacy & Security">
-        <InfoRow icon={Lock} label="Privacy" value="Profile visible to BridgeUp members" />
+        <InfoRow icon={Lock} label="Privacy" value="Profile visible to WeMentor members" />
         <InfoRow icon={ShieldAlert} label="Security" value="JWT protected account" />
         <InfoRow icon={Palette} label="Theme" value="Light mode" />
         <InfoRow icon={Languages} label="Language" value={settings?.language || 'English'} />

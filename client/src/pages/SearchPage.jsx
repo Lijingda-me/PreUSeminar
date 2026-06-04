@@ -285,7 +285,7 @@ function EventCard({ eventItem, loading, onToggle }) {
         <span className="flex items-center gap-1 rounded-2xl bg-brand-cream px-3 py-2"><MapPin size={14} /> {eventItem.location}</span>
         <span className="flex items-center gap-1 rounded-2xl bg-brand-cream px-3 py-2"><UsersRound size={14} /> {eventItem.participantCount || 0} joined</span>
       </div>
-      <p className="mt-3 text-sm font-semibold text-brand-muted">Organizer: {eventItem.organizer || 'BridgeUp Staff'}</p>
+      <p className="mt-3 text-sm font-semibold text-brand-muted">Organizer: {eventItem.organizer || 'WeMentor Staff'}</p>
     </article>
   );
 }

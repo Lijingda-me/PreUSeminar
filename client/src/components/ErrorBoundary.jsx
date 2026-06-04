@@ -15,7 +15,7 @@ export default class ErrorBoundary extends Component {
       return (
         <main className="grid min-h-screen place-items-center px-6 text-center">
           <section className="rounded-[32px] bg-white/80 p-6 shadow-soft">
-            <h1 className="text-4xl font-black text-brand-text">BridgeUp</h1>
+            <h1 className="text-4xl font-black text-brand-text">WeMentor</h1>
             <p className="mt-3 font-semibold text-brand-muted">The app had trouble starting. Refresh the page to reload your session.</p>
           </section>
         </main>

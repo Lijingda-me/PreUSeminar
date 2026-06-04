@@ -76,7 +76,7 @@ export default function Inbox() {
           <ChevronLeft />
         </Link>
         <div className="min-w-0 flex-1">
-          <p className="font-bold text-brand-muted">BridgeUp</p>
+          <p className="font-bold text-brand-muted">WeMentor</p>
           <h1 className="text-3xl font-black">Inbox</h1>
         </div>
         <div className="relative grid h-12 w-12 place-items-center rounded-2xl bg-brand-blue text-white">

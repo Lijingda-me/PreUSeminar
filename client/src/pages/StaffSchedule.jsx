@@ -74,7 +74,7 @@ export default function StaffSchedule() {
     <AppShell>
       <header className="mb-5 flex items-center justify-between">
         <div>
-          <p className="font-bold text-brand-muted">BridgeUp Staff</p>
+          <p className="font-bold text-brand-muted">WeMentor Staff</p>
           <h1 className="text-3xl font-black">Schedule</h1>
         </div>
         <div className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-yellow text-brand-text">
@@ -125,7 +125,7 @@ export default function StaffSchedule() {
               <div className="min-w-0 flex-1">
                 <h3 className="text-lg font-black">{item.title}</h3>
                 <p className="text-sm font-semibold text-brand-muted">{item.date} {item.time ? `at ${item.time}` : ''} - {item.location}</p>
-                <p className="text-xs font-bold text-brand-muted">Organizer: {item.organizer || 'BridgeUp Staff'} - {item.participantCount || item.attendees?.length || 0} participants</p>
+                <p className="text-xs font-bold text-brand-muted">Organizer: {item.organizer || 'WeMentor Staff'} - {item.participantCount || item.attendees?.length || 0} participants</p>
                 <p className="mt-2 text-sm text-brand-muted">{item.description}</p>
               </div>
               <button aria-label={`Remove ${item.title}`} onClick={() => deleteItem(item)} className="touch rounded-2xl bg-brand-coral px-3 text-white shadow">

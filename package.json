@@ -1,8 +1,8 @@
 {
-  "name": "bridgeup",
+  "name": "wementor",
   "version": "1.0.0",
   "private": true,
-  "description": "BridgeUp full-stack mobile-first mentorship web app",
+  "description": "WeMentor full-stack mobile-first mentorship web app",
   "scripts": {
     "install:all": "npm install --prefix server && npm install --prefix client",
     "dev": "npm run dev --prefix server",

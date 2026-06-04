@@ -6,7 +6,7 @@ import Button from '../components/Button';
 export default function RoleSelection() {
   return (
     <main className="mx-auto min-h-screen max-w-md px-5 py-8">
-      <h1 className="text-4xl font-black">Choose your BridgeUp role</h1>
+      <h1 className="text-4xl font-black">Choose your WeMentor role</h1>
       <div className="mt-8 grid gap-4">
         {[
           ['learner', GraduationCap, 'Find mentors and join workshops.'],

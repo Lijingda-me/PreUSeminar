@@ -75,8 +75,8 @@ export default function Onboarding() {
       <AppShell hideBottomNav>
         <div className="rounded-[32px] bg-white/80 p-6 shadow-soft">
           <h1 className="text-3xl font-black">{user.role === 'admin' ? 'Admin ready' : 'Staff ready'}</h1>
-          <p className="mt-2 text-brand-muted">{user.role === 'admin' ? 'Your admin account can verify users, moderate reports, and manage events from the admin dashboard.' : 'Your staff account can create schedules and manage BridgeUp events.'}</p>
-          <Button className="mt-6 w-full" onClick={submit}>Enter BridgeUp</Button>
+          <p className="mt-2 text-brand-muted">{user.role === 'admin' ? 'Your admin account can verify users, moderate reports, and manage events from the admin dashboard.' : 'Your staff account can create schedules and manage WeMentor events.'}</p>
+          <Button className="mt-6 w-full" onClick={submit}>Enter WeMentor</Button>
         </div>
       </AppShell>
     );
@@ -86,7 +86,7 @@ export default function Onboarding() {
     <AppShell hideBottomNav>
       <div className="flex min-h-[calc(100vh-40px)] flex-col justify-center">
         <header>
-          <p className="text-sm font-black uppercase tracking-[0.16em] text-brand-blue">BridgeUp setup</p>
+          <p className="text-sm font-black uppercase tracking-[0.16em] text-brand-blue">WeMentor setup</p>
           <h1 className="mt-1 text-[34px] font-black leading-tight">{user.role === 'mentor' ? 'Mentor onboarding' : 'Learner onboarding'}</h1>
           <p className="mt-2 text-sm font-semibold leading-6 text-brand-muted">A few quick cards power your compatibility score and match explanations.</p>
           <div className="mt-5">
@@ -122,7 +122,7 @@ export default function Onboarding() {
           )}
           {step === 3 && (
             <div className="grid gap-5">
-              <CardTitle title="Add your strengths" subtitle="Skills and soft skills help BridgeUp explain why a match makes sense." />
+              <CardTitle title="Add your strengths" subtitle="Skills and soft skills help WeMentor explain why a match makes sense." />
               <Picker label="Skills" options={skills} value={form.skills} onChange={(value) => setForm({ ...form, skills: value })} />
             </div>
           )}
@@ -136,7 +136,7 @@ export default function Onboarding() {
           )}
           {step === 5 && (
             <div className="grid gap-5">
-              <CardTitle title="What do you aim to achieve?" subtitle="Tell BridgeUp what you hope to get from this app so recommendations feel more personal." />
+              <CardTitle title="What do you aim to achieve?" subtitle="Tell WeMentor what you hope to get from this app so recommendations feel more personal." />
               <Picker label="Goals" options={goals} value={form.goals} onChange={(value) => setForm({ ...form, goals: value })} />
               <label className="block">
                 <span className="text-sm font-bold text-brand-muted">Mentorship style</span>
@@ -181,9 +181,9 @@ function WelcomeCard({ role }) {
       <div className="mx-auto grid h-20 w-20 place-items-center rounded-[28px] bg-brand-blue text-white shadow-soft">
         <Sparkles size={34} />
       </div>
-      <h2 className="mt-6 text-[30px] font-black leading-tight">Welcome to BridgeUp</h2>
+      <h2 className="mt-6 text-[30px] font-black leading-tight">Welcome to WeMentor</h2>
       <p className="mx-auto mt-3 max-w-sm text-base font-semibold leading-7 text-brand-muted">
-        BridgeUp helps {role === 'mentor' ? 'mentors find learners who can benefit from their guidance' : 'learners discover mentors, communities, and opportunities that match their goals'}.
+        WeMentor helps {role === 'mentor' ? 'mentors find learners who can benefit from their guidance' : 'learners discover mentors, communities, and opportunities that match their goals'}.
       </p>
       <p className="mx-auto mt-4 max-w-sm rounded-[22px] bg-brand-blue/10 p-4 text-sm font-bold leading-6 text-brand-blue">
         Complete these short cards so your recommendations feel relevant from the start.

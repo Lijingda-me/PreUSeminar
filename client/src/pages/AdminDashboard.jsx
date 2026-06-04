@@ -35,7 +35,7 @@ export default function AdminDashboard() {
       <AppShell>
         <div className="rounded-[32px] bg-white/80 p-6 text-center shadow-soft">
           <h1 className="text-3xl font-black">Admin</h1>
-          <p className="mt-2 text-brand-muted">Loading BridgeUp community overview...</p>
+          <p className="mt-2 text-brand-muted">Loading WeMentor community overview...</p>
         </div>
       </AppShell>
     );
@@ -47,7 +47,7 @@ export default function AdminDashboard() {
     <AppShell>
       <header className="mb-5 flex items-center justify-between">
         <div>
-          <p className="font-bold text-brand-muted">BridgeUp Admin</p>
+          <p className="font-bold text-brand-muted">WeMentor Admin</p>
           <h1 className="text-3xl font-black">Community overview</h1>
         </div>
         <div className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-blue text-white">
@@ -103,8 +103,8 @@ export default function AdminDashboard() {
               <div className="mt-3 grid gap-2">
                 <input className="touch rounded-2xl bg-brand-cream px-3" placeholder="Message about this report" value={messageText[report.id] || ''} onChange={(event) => setMessageText({ ...messageText, [report.id]: event.target.value })} />
                 <div className="flex flex-wrap gap-2">
-                  {report.reporter && <button className="touch rounded-2xl bg-brand-blue px-3 font-bold text-white" onClick={() => api.post(`/safety/admin/reports/${report.id}/messages`, { recipientId: report.reporter.id, body: messageText[report.id] || 'BridgeUp admin is reviewing your report.' }).then(() => { showToast('Message sent to reporter'); load(); })}><MessageCircle className="mr-1 inline" size={16} /> Reporter</button>}
-                  {report.reportedUser && <button className="touch rounded-2xl bg-brand-blue px-3 font-bold text-white" onClick={() => api.post(`/safety/admin/reports/${report.id}/messages`, { recipientId: report.reportedUser.id, body: messageText[report.id] || 'BridgeUp admin is contacting you about a report.' }).then(() => { showToast('Message sent to reported user'); load(); })}><MessageCircle className="mr-1 inline" size={16} /> Reported</button>}
+                  {report.reporter && <button className="touch rounded-2xl bg-brand-blue px-3 font-bold text-white" onClick={() => api.post(`/safety/admin/reports/${report.id}/messages`, { recipientId: report.reporter.id, body: messageText[report.id] || 'WeMentor admin is reviewing your report.' }).then(() => { showToast('Message sent to reporter'); load(); })}><MessageCircle className="mr-1 inline" size={16} /> Reporter</button>}
+                  {report.reportedUser && <button className="touch rounded-2xl bg-brand-blue px-3 font-bold text-white" onClick={() => api.post(`/safety/admin/reports/${report.id}/messages`, { recipientId: report.reportedUser.id, body: messageText[report.id] || 'WeMentor admin is contacting you about a report.' }).then(() => { showToast('Message sent to reported user'); load(); })}><MessageCircle className="mr-1 inline" size={16} /> Reported</button>}
                   {report.targetType === 'group' && report.group && <button className="touch rounded-2xl bg-brand-coral px-3 font-bold text-white" onClick={() => api.delete(`/community/groups/${report.group.id}`).then(() => { showToast('Group deleted'); load(); })}><Trash2 className="mr-1 inline" size={16} /> Delete group</button>}
                 </div>
                 {report.reportedUser && (

@@ -96,7 +96,7 @@ export default function Swipe() {
     <AppShell>
       <header className="mb-4 flex items-center justify-between">
         <div>
-          <p className="font-bold text-brand-muted">BridgeUp</p>
+          <p className="font-bold text-brand-muted">WeMentor</p>
           <h1 className="text-3xl font-black">Swipe to connect</h1>
         </div>
         <Link to="/inbox" className="relative grid h-12 w-12 place-items-center rounded-2xl bg-brand-blue text-white shadow-soft" aria-label="Inbox">

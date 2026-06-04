@@ -51,7 +51,7 @@ app.use(express.json({ limit: '100mb' }));
 app.use(morgan('dev'));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 2000 }));
 
-app.get('/health', (_req, res) => res.json({ ok: true, name: 'BridgeUp API' }));
+app.get('/health', (_req, res) => res.json({ ok: true, name: 'WeMentor API' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/profiles', profileRoutes);
 app.use('/api/matching', matchingRoutes);
@@ -67,14 +67,14 @@ app.get('*', (req, res, next) => {
 });
 
 app.get('/', (_req, res) => {
-  res.json({ ok: true, name: 'BridgeUp API', status: 'running' });
+  res.json({ ok: true, name: 'WeMentor API', status: 'running' });
 });
 
 app.use((err, _req, res, _next) => {
   console.error(err);
-  res.status(500).json({ message: 'BridgeUp hit an unexpected error.' });
+  res.status(500).json({ message: 'WeMentor hit an unexpected error.' });
 });
 
 app.listen(env.port, () => {
-  console.log(`BridgeUp API running on http://localhost:${env.port}`);
+  console.log(`WeMentor API running on http://localhost:${env.port}`);
 });

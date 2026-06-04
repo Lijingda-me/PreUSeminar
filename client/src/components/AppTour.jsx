@@ -16,7 +16,7 @@ function stepsFor(role) {
     selector: '[data-tour="swipe-card"]',
     hintSelector: '[data-tour="swipe-card"]',
     title: 'Discover Opportunities',
-    body: `BridgeUp recommends ${peerKind} based on your interests, goals, availability, and preferences. Swipe left to skip, swipe right to send a connection request, or view the full profile first.`,
+    body: `WeMentor recommends ${peerKind} based on your interests, goals, availability, and preferences. Swipe left to skip, swipe right to send a connection request, or view the full profile first.`,
     detail: "Compatibility Score shows how closely your goals align. Why You're Matched explains the shared interests behind each recommendation.",
     button: 'Hint'
   },
@@ -57,7 +57,7 @@ function stepsFor(role) {
     body: role === 'mentor'
       ? 'Use messaging to understand goals, offer advice, share experience, and build trust with learners. Mentorship begins with a conversation.'
       : 'Use messaging to ask questions, seek advice, discuss goals, and learn from experienced mentors. Mentorship begins with a conversation.',
-    detail: "After this, you'll be ready to explore BridgeUp on your own.",
+    detail: "After this, you'll be ready to explore WeMentor on your own.",
     button: 'Next'
   }
   ];

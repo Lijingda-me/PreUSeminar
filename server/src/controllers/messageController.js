@@ -147,7 +147,7 @@ async function chatScopeForUser(userId, scopeType, scopeId) {
   if (scopeType === 'group') {
     const chat = await findOne('groupChats', (item) => item.id === scopeId && (item.participantIds || []).includes(userId));
     if (!chat) return null;
-    return { scopeType, scopeId: chat.id, participantIds: chat.participantIds || [], title: chat.name || 'BridgeUp group chat' };
+    return { scopeType, scopeId: chat.id, participantIds: chat.participantIds || [], title: chat.name || 'WeMentor group chat' };
   }
   return null;
 }
@@ -400,8 +400,8 @@ export async function createGroupChat(req, res) {
   if (invalid.length) return res.status(403).json({ message: 'Group chats can only include connected matches.' });
   if (participantIds.length < 2) return res.status(400).json({ message: 'Choose at least one connected person.' });
   const chat = await insert('groupChats', {
-    name: req.body.name || 'BridgeUp group chat',
-    about: req.body.about || 'A private group chat for connected BridgeUp members.',
+    name: req.body.name || 'WeMentor group chat',
+    about: req.body.about || 'A private group chat for connected WeMentor members.',
     ownerId: req.user.id,
     moderators: [],
     participantIds

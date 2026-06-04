@@ -10,8 +10,8 @@ const users = [
   { id: 'mentor-2', name: 'Mdm Siti Rahman', email: 'siti@bridgeup.sg', role: 'mentor', onboarded: true, passwordHash, blockedUsers: [], savedProfiles: [], status: 'active' },
   { id: 'mentor-3', name: 'Dr Priya Nair', email: 'priya@bridgeup.sg', role: 'mentor', onboarded: true, passwordHash, blockedUsers: [], savedProfiles: [], status: 'active' },
   { id: 'learner-2', name: 'Joshua Goh', email: 'joshua@bridgeup.sg', role: 'learner', onboarded: true, passwordHash, blockedUsers: [], savedProfiles: [], status: 'active' },
-  { id: 'staff-1', name: 'BridgeUp Staff', email: 'staff@bridgeup.sg', role: 'staff', onboarded: true, passwordHash, blockedUsers: [], savedProfiles: [], status: 'active' },
-  { id: 'admin-1', name: 'BridgeUp Admin', email: 'admin@bridgeup.sg', role: 'admin', onboarded: true, passwordHash, blockedUsers: [], savedProfiles: [], status: 'active' }
+  { id: 'staff-1', name: 'WeMentor Staff', email: 'staff@bridgeup.sg', role: 'staff', onboarded: true, passwordHash, blockedUsers: [], savedProfiles: [], status: 'active' },
+  { id: 'admin-1', name: 'WeMentor Admin', email: 'admin@bridgeup.sg', role: 'admin', onboarded: true, passwordHash, blockedUsers: [], savedProfiles: [], status: 'active' }
 ];
 
 const learnerProfiles = [
@@ -122,7 +122,7 @@ await writeDb({
   matches: [{ id: 'match-1', learnerId: 'learner-1', mentorId: 'mentor-1', status: 'matched', ...matchSeed, createdAt: now, updatedAt: now }],
   matchRequests: [{ id: 'req-1', fromUserId: 'learner-1', toUserId: 'mentor-1', action: 'connect', status: 'accepted', createdAt: now, updatedAt: now }],
   messages: [
-    { id: 'msg-1', matchId: 'match-1', senderId: 'mentor-1', receiverId: 'learner-1', body: 'Welcome to BridgeUp, Aisha. Shall we plan a weekend chat?', readAt: null, createdAt: now, updatedAt: now }
+    { id: 'msg-1', matchId: 'match-1', senderId: 'mentor-1', receiverId: 'learner-1', body: 'Welcome to WeMentor, Aisha. Shall we plan a weekend chat?', readAt: null, createdAt: now, updatedAt: now }
   ],
   reports: [],
   workshops: [
@@ -130,7 +130,7 @@ await writeDb({
     { id: 'workshop-2', hostId: 'mentor-3', title: 'Build a Portfolio That Opens Doors', description: 'Hands-on review for design and tech portfolios.', date: '2026-06-21', location: 'One Punggol', capacity: 16, attendees: [], createdAt: now, updatedAt: now }
   ],
   events: [
-    { id: 'event-1', title: 'BridgeUp Community Tea', description: 'Meet mentors, learners, and retirees in a relaxed intergenerational session.', date: '2026-06-08', location: 'Tampines Regional Library', attendees: [], createdAt: now, updatedAt: now }
+    { id: 'event-1', title: 'WeMentor Community Tea', description: 'Meet mentors, learners, and retirees in a relaxed intergenerational session.', date: '2026-06-08', location: 'Tampines Regional Library', attendees: [], createdAt: now, updatedAt: now }
   ],
   groups: [
     { id: 'group-1', name: 'Finance Starters', topic: 'Finance', description: 'Career guidance, interview prep, and workplace stories from banking mentors.', members: ['learner-1'], createdAt: now, updatedAt: now },
@@ -139,4 +139,4 @@ await writeDb({
   userSettings: users.map((user) => ({ id: `settings-${user.id}`, userId: user.id, largerText: false, reduceMotion: false, highContrast: false, language: 'English', notifications: true, createdAt: now, updatedAt: now }))
 });
 
-console.log('BridgeUp seed data ready.');
+console.log('WeMentor seed data ready.');

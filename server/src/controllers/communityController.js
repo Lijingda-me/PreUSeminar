@@ -197,7 +197,7 @@ export async function attendWorkshop(req, res) {
 }
 
 function decorateEvent(event, users = [], userId = null) {
-  const organizer = event.organizer || users.find((user) => user.id === event.createdBy)?.name || 'BridgeUp Staff';
+  const organizer = event.organizer || users.find((user) => user.id === event.createdBy)?.name || 'WeMentor Staff';
   const attendees = event.attendees || [];
   return {
     ...event,

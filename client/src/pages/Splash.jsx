@@ -26,7 +26,7 @@ export default function Splash() {
           <HeartHandshake size={54} />
         </div>
         <div>
-          <h1 className="text-5xl font-black text-brand-text">BridgeUp</h1>
+          <h1 className="text-5xl font-black text-brand-text">WeMentor</h1>
           <p className="mt-3 text-lg font-semibold text-brand-muted">Mentorship across generations</p>
         </div>
       </div>

@@ -47,7 +47,7 @@ export async function swipe(req, res) {
   const target = await findOne('users', (item) => item.id === targetUserId);
   if (!target) return res.status(404).json({ message: 'User not found.' });
   if (req.user.role === target.role || ['admin', 'staff'].includes(req.user.role) || ['admin', 'staff'].includes(target.role)) {
-    return res.status(400).json({ message: 'BridgeUp only matches learners with mentors.' });
+    return res.status(400).json({ message: 'WeMentor only matches learners with mentors.' });
   }
 
   const existingPending = await findOne('matchRequests', (item) =>
@@ -141,7 +141,7 @@ export async function inbox(req, res) {
         ...request,
         sender: safeUser(sender),
         senderProfile: profile,
-        senderSummary: profile?.bio || profile?.profession || 'BridgeUp member'
+        senderSummary: profile?.bio || profile?.profession || 'WeMentor member'
       };
     })
   });

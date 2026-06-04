@@ -122,7 +122,7 @@ export default function PublicProfile() {
           </Section>
           <Section title="Achievements">
             <div className="grid gap-2">
-              {['Verified BridgeUp profile', `${profile.yearsExperience || 0}+ years of practical experience`, `${profile.mentorshipStyle || 'Supportive'} mentorship style`].map((item) => (
+              {['Verified WeMentor profile', `${profile.yearsExperience || 0}+ years of practical experience`, `${profile.mentorshipStyle || 'Supportive'} mentorship style`].map((item) => (
                 <div key={item} className="flex items-center gap-3 rounded-2xl bg-brand-cream p-3 text-sm font-bold"><Award size={18} className="text-brand-blue" /> {item}</div>
               ))}
             </div>
@@ -130,7 +130,7 @@ export default function PublicProfile() {
           <Section title="Reviews">
             <div className="rounded-[22px] bg-brand-cream p-4">
               <div className="flex text-brand-yellow"><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /></div>
-              <p className="mt-2 text-sm font-semibold text-brand-muted">BridgeUp members describe this mentor as practical, patient, and easy to talk to.</p>
+              <p className="mt-2 text-sm font-semibold text-brand-muted">WeMentor members describe this mentor as practical, patient, and easy to talk to.</p>
             </div>
           </Section>
           <Section title="Gallery">

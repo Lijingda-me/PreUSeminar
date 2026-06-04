@@ -67,7 +67,7 @@
     },
     {
       "id": "staff-1",
-      "name": "BridgeUp Staff",
+      "name": "WeMentor Staff",
       "email": "staff@bridgeup.sg",
       "role": "staff",
       "onboarded": true,
@@ -80,7 +80,7 @@
     },
     {
       "id": "admin-1",
-      "name": "BridgeUp Admin",
+      "name": "WeMentor Admin",
       "email": "admin@bridgeup.sg",
       "role": "admin",
       "onboarded": true,
@@ -443,7 +443,7 @@
       "matchId": "match-1",
       "senderId": "mentor-1",
       "receiverId": "learner-1",
-      "body": "Welcome to BridgeUp, Aisha. Shall we plan a weekend chat?",
+      "body": "Welcome to WeMentor, Aisha. Shall we plan a weekend chat?",
       "readAt": null,
       "createdAt": "2026-06-01T05:28:22.978Z",
       "updatedAt": "2026-06-01T06:51:09.923Z",
@@ -653,7 +653,7 @@
       "reportId": "71188d62-abf6-4f37-bffb-8c4f768bd4c0",
       "adminId": "admin-1",
       "recipientId": "learner-1",
-      "body": "BridgeUp admin is contacting you about a report.",
+      "body": "WeMentor admin is contacting you about a report.",
       "createdAt": "2026-05-31T16:29:30.631Z",
       "updatedAt": "2026-05-31T16:29:30.631Z"
     },
@@ -662,7 +662,7 @@
       "reportId": "71188d62-abf6-4f37-bffb-8c4f768bd4c0",
       "adminId": "admin-1",
       "recipientId": "learner-1",
-      "body": "BridgeUp admin is contacting you about a report.",
+      "body": "WeMentor admin is contacting you about a report.",
       "createdAt": "2026-05-31T16:29:31.638Z",
       "updatedAt": "2026-05-31T16:29:31.638Z"
     },
@@ -671,7 +671,7 @@
       "reportId": "71188d62-abf6-4f37-bffb-8c4f768bd4c0",
       "adminId": "admin-1",
       "recipientId": "learner-1",
-      "body": "BridgeUp admin is reviewing your report.",
+      "body": "WeMentor admin is reviewing your report.",
       "createdAt": "2026-05-31T16:29:32.424Z",
       "updatedAt": "2026-05-31T16:29:32.424Z"
     },
@@ -680,7 +680,7 @@
       "reportId": "71188d62-abf6-4f37-bffb-8c4f768bd4c0",
       "adminId": "admin-1",
       "recipientId": "learner-1",
-      "body": "BridgeUp admin is reviewing your report.",
+      "body": "WeMentor admin is reviewing your report.",
       "createdAt": "2026-05-31T16:29:32.712Z",
       "updatedAt": "2026-05-31T16:29:32.712Z"
     },
@@ -689,7 +689,7 @@
       "reportId": "71188d62-abf6-4f37-bffb-8c4f768bd4c0",
       "adminId": "admin-1",
       "recipientId": "learner-1",
-      "body": "BridgeUp admin is reviewing your report.",
+      "body": "WeMentor admin is reviewing your report.",
       "createdAt": "2026-05-31T16:29:32.884Z",
       "updatedAt": "2026-05-31T16:29:32.884Z"
     },
@@ -698,7 +698,7 @@
       "reportId": "71188d62-abf6-4f37-bffb-8c4f768bd4c0",
       "adminId": "admin-1",
       "recipientId": "learner-1",
-      "body": "BridgeUp admin is contacting you about a report.",
+      "body": "WeMentor admin is contacting you about a report.",
       "createdAt": "2026-05-31T16:29:33.835Z",
       "updatedAt": "2026-05-31T16:29:33.835Z"
     },
@@ -707,7 +707,7 @@
       "reportId": "71188d62-abf6-4f37-bffb-8c4f768bd4c0",
       "adminId": "admin-1",
       "recipientId": "learner-1",
-      "body": "BridgeUp admin is reviewing your report.",
+      "body": "WeMentor admin is reviewing your report.",
       "createdAt": "2026-05-31T16:29:34.442Z",
       "updatedAt": "2026-05-31T16:29:34.442Z"
     },
@@ -716,7 +716,7 @@
       "reportId": "71188d62-abf6-4f37-bffb-8c4f768bd4c0",
       "adminId": "admin-1",
       "recipientId": "learner-1",
-      "body": "BridgeUp admin is reviewing your report.",
+      "body": "WeMentor admin is reviewing your report.",
       "createdAt": "2026-05-31T16:29:34.604Z",
       "updatedAt": "2026-05-31T16:29:34.604Z"
     },
@@ -725,7 +725,7 @@
       "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
       "adminId": "admin-1",
       "recipientId": "mentor-1",
-      "body": "BridgeUp admin is contacting you about a report.",
+      "body": "WeMentor admin is contacting you about a report.",
       "createdAt": "2026-05-31T16:29:37.417Z",
       "updatedAt": "2026-05-31T16:29:37.417Z"
     },
@@ -734,7 +734,7 @@
       "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
       "adminId": "admin-1",
       "recipientId": "mentor-1",
-      "body": "BridgeUp admin is contacting you about a report.",
+      "body": "WeMentor admin is contacting you about a report.",
       "createdAt": "2026-05-31T16:29:37.637Z",
       "updatedAt": "2026-05-31T16:29:37.637Z"
     },
@@ -743,7 +743,7 @@
       "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
       "adminId": "admin-1",
       "recipientId": "learner-1",
-      "body": "BridgeUp admin is reviewing your report.",
+      "body": "WeMentor admin is reviewing your report.",
       "createdAt": "2026-05-31T16:29:37.970Z",
       "updatedAt": "2026-05-31T16:29:37.970Z"
     },
@@ -752,7 +752,7 @@
       "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
       "adminId": "admin-1",
       "recipientId": "learner-1",
-      "body": "BridgeUp admin is reviewing your report.",
+      "body": "WeMentor admin is reviewing your report.",
       "createdAt": "2026-05-31T16:29:38.159Z",
       "updatedAt": "2026-05-31T16:29:38.159Z"
     },
@@ -761,7 +761,7 @@
       "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
       "adminId": "admin-1",
       "recipientId": "mentor-1",
-      "body": "BridgeUp admin is contacting you about a report.",
+      "body": "WeMentor admin is contacting you about a report.",
       "createdAt": "2026-05-31T16:29:42.332Z",
       "updatedAt": "2026-05-31T16:29:42.332Z"
     },
@@ -770,7 +770,7 @@
       "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
       "adminId": "admin-1",
       "recipientId": "learner-1",
-      "body": "BridgeUp admin is reviewing your report.",
+      "body": "WeMentor admin is reviewing your report.",
       "createdAt": "2026-05-31T16:29:42.776Z",
       "updatedAt": "2026-05-31T16:29:42.776Z"
     },
@@ -779,7 +779,7 @@
       "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
       "adminId": "admin-1",
       "recipientId": "mentor-1",
-      "body": "BridgeUp admin is contacting you about a report.",
+      "body": "WeMentor admin is contacting you about a report.",
       "createdAt": "2026-05-31T16:29:43.039Z",
       "updatedAt": "2026-05-31T16:29:43.039Z"
     },
@@ -788,7 +788,7 @@
       "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
       "adminId": "admin-1",
       "recipientId": "learner-1",
-      "body": "BridgeUp admin is reviewing your report.",
+      "body": "WeMentor admin is reviewing your report.",
       "createdAt": "2026-05-31T16:29:50.383Z",
       "updatedAt": "2026-05-31T16:29:50.383Z"
     },
@@ -797,7 +797,7 @@
       "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
       "adminId": "admin-1",
       "recipientId": "mentor-1",
-      "body": "BridgeUp admin is contacting you about a report.",
+      "body": "WeMentor admin is contacting you about a report.",
       "createdAt": "2026-05-31T16:29:50.789Z",
       "updatedAt": "2026-05-31T16:29:50.789Z"
     },
@@ -806,7 +806,7 @@
       "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
       "adminId": "admin-1",
       "recipientId": "learner-1",
-      "body": "BridgeUp admin is reviewing your report.",
+      "body": "WeMentor admin is reviewing your report.",
       "createdAt": "2026-05-31T16:29:51.080Z",
       "updatedAt": "2026-05-31T16:29:51.080Z"
     },
@@ -815,7 +815,7 @@
       "reportId": "79ee2477-7bf0-4468-933c-e887acd23bd3",
       "adminId": "admin-1",
       "recipientId": "mentor-1",
-      "body": "BridgeUp admin is contacting you about a report.",
+      "body": "WeMentor admin is contacting you about a report.",
       "createdAt": "2026-05-31T16:29:51.794Z",
       "updatedAt": "2026-05-31T16:29:51.794Z"
     }
@@ -853,7 +853,7 @@
   "events": [
     {
       "id": "event-1",
-      "title": "BridgeUp Community Tea",
+      "title": "WeMentor Community Tea",
       "description": "Meet mentors, learners, and retirees in a relaxed intergenerational session.",
       "date": "2026-06-08",
       "location": "Tampines Regional Library",
