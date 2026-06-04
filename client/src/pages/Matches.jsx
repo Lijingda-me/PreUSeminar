@@ -50,7 +50,12 @@ export default function Matches() {
               <h2 className="truncate text-xl font-black">{match.other?.name}</h2>
               <p className="line-clamp-2 text-sm text-brand-muted">{match.explanation}</p>
             </div>
-            <MessageCircle className="text-brand-blue" />
+            <span
+              data-tour={match.onboarding ? 'match-chat-button' : undefined}
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-blue/10"
+            >
+              <MessageCircle className="text-brand-blue" />
+            </span>
           </Link>
         ))}
         {!visibleMatches.length && <div className="rounded-[28px] bg-white/80 p-6 text-center shadow">Your mutual matches will appear here.</div>}

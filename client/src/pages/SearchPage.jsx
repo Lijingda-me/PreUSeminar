@@ -104,6 +104,10 @@ export default function SearchPage() {
 
   async function connect(candidate) {
     if (candidate.requestStatus === 'pending' || candidate.requestStatus === 'connected') return;
+    if (candidate.onboarding) {
+      showToast('View the profile to continue the tour.', 'info');
+      return;
+    }
     try {
       await api.post('/matching/swipe', { targetUserId: candidate.user.id, action: 'connect' });
       setResults((items) => items.map((item) => item.user.id === candidate.user.id ? { ...item, requestStatus: 'pending' } : item));
@@ -114,6 +118,10 @@ export default function SearchPage() {
   }
 
   async function save(candidate) {
+    if (candidate.onboarding) {
+      showToast('This is a temporary tour profile.', 'info');
+      return;
+    }
     try {
       await api.post(`/profiles/save/${candidate.user.id}`);
       const next = Array.from(new Set([...savedIds, candidate.user.id]));

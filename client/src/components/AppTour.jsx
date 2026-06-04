@@ -1,7 +1,7 @@
 import React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Sparkles, X } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { TOUR_MATCH_ID, tourCandidateFor, tourPeerIdFor, useTourStore } from '../store/tourStore';
@@ -14,37 +14,41 @@ function stepsFor(role) {
   {
     route: '/swipe',
     selector: '[data-tour="swipe-card"]',
+    hintSelector: '[data-tour="swipe-card"]',
     title: 'Discover Opportunities',
     body: `BridgeUp recommends ${peerKind} based on your interests, goals, availability, and preferences. Swipe left to skip, swipe right to send a connection request, or view the full profile first.`,
     detail: "Compatibility Score shows how closely your goals align. Why You're Matched explains the shared interests behind each recommendation.",
-    button: 'Try It Yourself'
+    button: 'Hint'
   },
   {
     route: '/search',
     selector: '[data-tour="search-mock-card"]',
+    hintSelector: '[data-tour="search-view-profile"]',
     placement: 'top',
     title: 'Explore Beyond Swiping',
     body: `Prefer searching instead? Search helps you find specific ${peerKind}, discover community groups, and browse workshops or events.`,
     detail: `Tap View Profile on ${peerName} to learn more before connecting.`,
-    button: `View ${peerName.split(' ')[0]} Profile`
+    button: 'Hint'
   },
   {
     route: `/profiles/${peer.user.id}`,
     selector: '[data-tour="profile-connect"]',
+    hintSelector: '[data-tour="profile-connect"]',
     title: 'Send a Connection Request',
     body: role === 'mentor'
       ? "Found a learner you'd like to guide? Send them a connection request. If they're interested too, you'll become a match and unlock messaging."
       : "Found someone you'd like to learn from? Send them a connection request. If they're interested too, you'll become a match and unlock messaging.",
     detail: `Tap Connect to send ${peerName} a temporary request for this tour.`,
-    button: 'Connect'
+    button: 'Hint'
   },
   {
     route: '/matches',
     selector: '[data-tour="match-card"]',
+    hintSelector: '[data-tour="match-chat-button"]',
     title: "You've Matched",
     body: `When both you and ${role === 'mentor' ? 'a learner' : 'a mentor'} express interest, a match is created. Matched ${peerKind} appear here so you can start conversations.`,
     detail: 'Tap the chat button to begin the conversation.',
-    button: 'Chat'
+    button: 'Hint'
   },
   {
     route: `/messages/${TOUR_MATCH_ID}`,
@@ -67,7 +71,7 @@ export default function AppTour() {
   const user = useAuthStore((state) => state.user);
   const location = useLocation();
   const navigate = useNavigate();
-  const { active, step, phase, swipeTried, start, skip, complete, setStep } = useTourStore();
+  const { active, step, phase, start, complete, setStep } = useTourStore();
   const [rect, setRect] = useState(null);
   const role = user?.role;
   const peerId = tourPeerIdFor(role);
@@ -136,8 +140,6 @@ export default function AppTour() {
     : targetCenter < window.innerHeight / 2
       ? window.innerHeight - cardHeight - 16
       : 16;
-  const skipLeft = clamp(spotlight.left + 12, 16, window.innerWidth - 118);
-  const connectLeft = clamp(spotlight.left + spotlight.width - 140, 16, window.innerWidth - 156);
   const progress = phase === 'ready' ? 5 : step + 1;
 
   function cancelTour() {
@@ -162,31 +164,39 @@ export default function AppTour() {
     setStep(step - 1);
   }
 
-  function next() {
+  function showHint() {
+    const target = document.querySelector(current.hintSelector || current.selector);
+    if (!target?.animate) return;
+    if (step === 0) {
+      target.animate(
+        [
+          { transform: 'translateX(0) rotate(0deg)' },
+          { transform: 'translateX(28px) rotate(2deg)' },
+          { transform: 'translateX(-22px) rotate(-2deg)' },
+          { transform: 'translateX(0) rotate(0deg)' }
+        ],
+        { duration: 850, easing: 'ease-in-out' }
+      );
+      return;
+    }
+    target.animate(
+      [
+        { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(47,107,255,0)' },
+        { transform: 'scale(1.04)', boxShadow: '0 0 0 10px rgba(47,107,255,0.22)' },
+        { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(47,107,255,0)' }
+      ],
+      { duration: 700, easing: 'ease-out' }
+    );
+  }
+
+  function primaryAction() {
     if (phase === 'ready') {
       complete(user.id);
       navigate('/swipe');
       return;
     }
-    if (step === 0 && !swipeTried) return;
-    if (step === 0) {
-      setStep(1);
-      navigate('/search');
-      return;
-    }
-    if (step === 1) {
-      navigate(`/profiles/${peerId}`, { state: { onboardingTour: true } });
-      setStep(2);
-      return;
-    }
-    if (step === 2) {
-      setStep(3);
-      navigate('/matches');
-      return;
-    }
-    if (step === 3) {
-      setStep(4);
-      navigate(`/messages/${TOUR_MATCH_ID}`);
+    if (step < 4) {
+      showHint();
       return;
     }
     setStep(4, 'ready');
@@ -207,28 +217,6 @@ export default function AppTour() {
             height: spotlight.height + 16
           }}
         />
-        {step === 0 && phase !== 'ready' && (
-          <>
-            <motion.div
-              initial={{ opacity: 0, x: 0 }}
-              animate={{ opacity: [0, 1, 1, 0], x: [0, -42, -42, 0] }}
-              transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 0.5 }}
-              className="absolute rounded-full bg-white px-4 py-2 text-sm font-black text-brand-coral shadow-soft"
-              style={{ left: skipLeft, top: clamp(spotlight.top + spotlight.height / 2 - 18, 16, window.innerHeight - 52) }}
-            >
-              X Skip
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 0 }}
-              animate={{ opacity: [0, 1, 1, 0], x: [0, 42, 42, 0] }}
-              transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 0.5, delay: 1.25 }}
-              className="absolute rounded-full bg-white px-4 py-2 text-sm font-black text-brand-blue shadow-soft"
-              style={{ left: connectLeft, top: clamp(spotlight.top + spotlight.height / 2 - 18, 16, window.innerHeight - 52) }}
-            >
-              Heart Connect
-            </motion.div>
-          </>
-        )}
         <motion.section
           key={`${step}-${phase}`}
           initial={{ opacity: 0, y: 18, scale: 0.97 }}
@@ -251,8 +239,8 @@ export default function AppTour() {
           <h2 className="mt-1 text-[24px] font-black leading-tight">{current.title}</h2>
           <p className="mt-2 text-sm font-bold leading-6 text-slate-700">{current.body}</p>
           {current.detail && <p className="mt-3 rounded-[18px] bg-brand-blue/10 p-3 text-xs font-bold leading-5 text-brand-blue">{current.detail}</p>}
-          {step === 0 && !swipeTried && phase !== 'ready' && (
-            <p className="mt-3 text-xs font-black text-brand-coral">Try a left or right swipe on the card to continue.</p>
+          {step === 0 && phase !== 'ready' && (
+            <p className="mt-3 text-xs font-black text-brand-coral">Tap Hint to preview the gesture, then swipe the card yourself to continue.</p>
           )}
           <div className="mt-4 grid grid-cols-[48px_1fr] gap-2">
             <button
@@ -264,11 +252,10 @@ export default function AppTour() {
               <ArrowLeft size={18} />
             </button>
             <button
-              onClick={next}
-              disabled={step === 0 && !swipeTried && phase !== 'ready'}
-              className="flex h-12 items-center justify-center gap-2 rounded-full bg-brand-blue text-sm font-black text-white disabled:bg-slate-200 disabled:text-brand-muted"
+              onClick={primaryAction}
+              className="flex h-12 items-center justify-center gap-2 rounded-full bg-brand-blue text-sm font-black text-white"
             >
-              {phase === 'ready' ? <Check size={18} /> : <ArrowRight size={18} />}
+              {phase === 'ready' ? <Check size={18} /> : step < 4 ? <Sparkles size={18} /> : <ArrowRight size={18} />}
               {current.button}
             </button>
           </div>
